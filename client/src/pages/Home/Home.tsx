@@ -21,6 +21,9 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import QualitativeReport from '@/pages/QualitativeReport/QualitativeReport';
+import QuantitativeReport from '@/pages/QuantitativeReport/QuantitativeReport';
+import ProjectSummary from '@/pages/ProjectSummary/ProjectSummary';
 
 // --- Types ---
 type Brand = '洋葱' | '妙懂' | '学而思' | '万物指南' | 'NB虚拟实验室' | '赛先生';
@@ -670,17 +673,6 @@ const EmptyState = ({ onCreate }: { onCreate: () => void }) => (
 );
 
 // --- Main ---
-const PlaceholderPage = ({ title, description, icon: Icon }: { title: string; description: string; icon: React.ElementType }) => (
-  <div className="flex flex-col items-center justify-center h-full py-20">
-    <div className="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mb-6">
-      <Icon size={40} className="text-indigo-400" />
-    </div>
-    <h3 className="text-xl font-bold text-gray-900 mb-2">{title}</h3>
-    <p className="text-gray-500 mb-6">{description}</p>
-    <span className="px-4 py-2 bg-indigo-50 text-indigo-600 text-sm font-medium rounded-full">即将上线</span>
-  </div>
-);
-
 const Home = () => {
   const [projects, setProjects] = React.useState<Project[]>(DEFAULT_PROJECTS);
   const [activeProject, setActiveProject] = React.useState<Project>(DEFAULT_PROJECTS[0]);
@@ -805,13 +797,13 @@ const Home = () => {
                 <InsightsPage project={activeProject} onParseFiles={handleParseFiles} onAddFiles={() => setIsAddFileDialogOpen(true)} />
               )}
               {activeTab === 'qualitative-report' && (
-                <PlaceholderPage title="定性报告" description="基于定性洞察数据自动生成分析报告" icon={Sparkles} />
+                <QualitativeReport project={activeProject} />
               )}
               {activeTab === 'quantitative-report' && (
-                <PlaceholderPage title="定量报告" description="问卷数据统计分析与可视化报告" icon={LayoutDashboard} />
+                <QuantitativeReport project={activeProject} />
               )}
               {activeTab === 'project-summary' && (
-                <PlaceholderPage title="项目总结" description="汇总定性定量数据，生成项目研究总结" icon={FileText} />
+                <ProjectSummary project={activeProject} />
               )}
             </motion.div>
           </AnimatePresence>
