@@ -14,6 +14,65 @@ import * as mammoth from 'mammoth';
 const pdfParse = require('pdf-parse');
 import { AiService, VOCItem } from './ai.service';
 
+/**
+ * Convert mammoth HTML output to structured plain text that preserves
+ * document hierarchy (headings, tables, lists) so the AI can correctly
+ * identify brand sections and user quotes.
+ */
+function htmlToStructuredText(html: string): string {
+  let text = html;
+
+  // Headings → markdown-style markers so AI sees section boundaries
+  text = text.replace(/<h1[^>]*>([\s\S]*?)<\/h1>/gi, '\n\n# $1\n\n');
+  text = text.replace(/<h2[^>]*>([\s\S]*?)<\/h2>/gi, '\n\n## $1\n\n');
+  text = text.replace(/<h3[^>]*>([\s\S]*?)<\/h3>/gi, '\n\n### $1\n\n');
+  text = text.replace(/<h4[^>]*>([\s\S]*?)<\/h4>/gi, '\n\n#### $1\n\n');
+  text = text.replace(/<h[5-6][^>]*>([\s\S]*?)<\/h[5-6]>/gi, '\n\n##### $1\n\n');
+
+  // Bold/strong text — often used as section labels or speaker names in interview docs
+  text = text.replace(/<strong[^>]*>([\s\S]*?)<\/strong>/gi, '**$1**');
+  text = text.replace(/<b[^>]*>([\s\S]*?)<\/b>/gi, '**$1**');
+
+  // Table rows → pipe-separated so table content is readable
+  text = text.replace(/<tr[^>]*>([\s\S]*?)<\/tr>/gi, (_, row: string) => {
+    const cells = row.match(/<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi) || [];
+    const cellTexts = cells.map((c: string) =>
+      c.replace(/<[^>]+>/g, '').trim(),
+    );
+    return cellTexts.join(' | ') + '\n';
+  });
+  text = text.replace(/<\/?table[^>]*>/gi, '\n');
+  text = text.replace(/<\/?thead[^>]*>/gi, '');
+  text = text.replace(/<\/?tbody[^>]*>/gi, '');
+
+  // List items
+  text = text.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, '- $1\n');
+  text = text.replace(/<\/?[ou]l[^>]*>/gi, '\n');
+
+  // Paragraphs and line breaks
+  text = text.replace(/<br\s*\/?>/gi, '\n');
+  text = text.replace(/<\/p>/gi, '\n\n');
+  text = text.replace(/<p[^>]*>/gi, '');
+
+  // Strip remaining HTML tags
+  text = text.replace(/<[^>]+>/g, '');
+
+  // Decode common HTML entities
+  text = text
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, ' ');
+
+  // Collapse excessive blank lines but keep paragraph separation
+  text = text.replace(/\n{4,}/g, '\n\n\n');
+  text = text.replace(/[ \t]+\n/g, '\n');
+
+  return text.trim();
+}
+
 const AUDIO_MIME_TYPES = new Set([
   'audio/mpeg',
   'audio/mp3',
@@ -119,14 +178,39 @@ export class AiController {
     const ext = file.originalname.split('.').pop()?.toLowerCase() ?? '';
     let text: string;
 
-    if (ext === 'docx' || ext === 'doc') {
-      const result = await mammoth.extractRawText({ buffer: file.buffer });
-      text = result.value;
-    } else if (ext === 'pdf') {
-      const result = await pdfParse(file.buffer);
-      text = result.text;
-    } else {
-      text = file.buffer.toString('utf-8');
+    try {
+      if (ext === 'docx' || ext === 'doc') {
+        // Use convertToHtml to preserve headings, tables, lists, and bold text,
+        // then convert to structured plain text. extractRawText strips all
+        // structure, making it impossible for the AI to locate brand sections
+        // and verbatim user quotes.
+        const htmlResult = await mammoth.convertToHtml({ buffer: file.buffer });
+
+        if (htmlResult.messages?.length) {
+          for (const msg of htmlResult.messages) {
+            this.logger.warn(`mammoth [${msg.type}]: ${msg.message}`);
+          }
+        }
+
+        if (htmlResult.value && htmlResult.value.trim().length > 0) {
+          text = htmlToStructuredText(htmlResult.value);
+        } else {
+          // Fallback: try raw text extraction in case convertToHtml returned empty
+          this.logger.warn('convertToHtml returned empty, falling back to extractRawText');
+          const rawResult = await mammoth.extractRawText({ buffer: file.buffer });
+          text = rawResult.value;
+        }
+      } else if (ext === 'pdf') {
+        const result = await pdfParse(file.buffer);
+        text = result.text;
+      } else {
+        text = file.buffer.toString('utf-8');
+      }
+    } catch (err) {
+      this.logger.error(`Failed to parse .${ext} file "${file.originalname}": ${err}`);
+      throw new BadRequestException(
+        `文档解析失败，请确认文件格式正确（.doc 格式建议另存为 .docx 后重新上传）`,
+      );
     }
 
     this.logger.log(`Document parsed: ${text.length} chars from .${ext} file`);
@@ -134,6 +218,9 @@ export class AiController {
     if (!text || text.trim().length === 0) {
       throw new BadRequestException('文档内容为空，无法提取VOC数据');
     }
+
+    // Log a preview for debugging extraction issues
+    this.logger.debug(`Document preview (first 500 chars): ${text.slice(0, 500)}`);
 
     const vocList = await this.aiService.extractVOCs(text);
 
