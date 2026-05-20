@@ -631,7 +631,7 @@ const InsightsPage = ({ project, onParseFiles, onAddFiles, onDeleteFile }: { pro
 
       <div className="space-y-4">
         {currentDimension.subDimensions.map((subDim) => {
-          const vocs = getVOCsForSubDimension(subDim.title);
+          const vocs = getVOCsForSubDimension(subDim.title).filter(v => selectedBrands.includes(v.brand));
           const isExpanded = expandedSubDimensions.includes(subDim.title);
 
           return (
