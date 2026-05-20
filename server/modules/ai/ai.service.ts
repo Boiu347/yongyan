@@ -187,7 +187,7 @@ export class AiService {
       `AI config: model=${this.aiModel}, baseUrl=${this.baseUrl}, apiKey=${this.apiKey ? '***' + this.apiKey.slice(-4) : 'EMPTY'}`,
     );
 
-    const CHUNK_SIZE = 6000;
+    const CHUNK_SIZE = 3000;
     const chunks = this.splitTextIntoChunks(textContent, CHUNK_SIZE);
     this.logger.log(`Split text into ${chunks.length} chunks (limit ${CHUNK_SIZE} chars each)`);
 
@@ -262,7 +262,7 @@ ${chunkText}`;
             Authorization: `Bearer ${this.apiKey}`,
             'Content-Type': 'application/json',
           },
-          timeout: 120_000,
+          timeout: 300_000,
         },
       );
     } catch (err: any) {
