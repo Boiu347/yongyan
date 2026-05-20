@@ -22,42 +22,36 @@ import { AiService, VOCItem } from './ai.service';
 function htmlToStructuredText(html: string): string {
   let text = html;
 
-  // Headings → markdown-style markers so AI sees section boundaries
-  text = text.replace(/<h1[^>]*>([\s\S]*?)<\/h1>/gi, '\n\n# $1\n\n');
-  text = text.replace(/<h2[^>]*>([\s\S]*?)<\/h2>/gi, '\n\n## $1\n\n');
-  text = text.replace(/<h3[^>]*>([\s\S]*?)<\/h3>/gi, '\n\n### $1\n\n');
-  text = text.replace(/<h4[^>]*>([\s\S]*?)<\/h4>/gi, '\n\n#### $1\n\n');
-  text = text.replace(/<h[5-6][^>]*>([\s\S]*?)<\/h[5-6]>/gi, '\n\n##### $1\n\n');
+  // Use [^<]* instead of [\s\S]*? to avoid catastrophic backtracking on large docs
+  text = text.replace(/<h1[^>]*>([^<]*(?:<(?!\/h1)[^<]*)*)<\/h1>/gi, '\n\n# $1\n\n');
+  text = text.replace(/<h2[^>]*>([^<]*(?:<(?!\/h2)[^<]*)*)<\/h2>/gi, '\n\n## $1\n\n');
+  text = text.replace(/<h3[^>]*>([^<]*(?:<(?!\/h3)[^<]*)*)<\/h3>/gi, '\n\n### $1\n\n');
+  text = text.replace(/<h4[^>]*>([^<]*(?:<(?!\/h4)[^<]*)*)<\/h4>/gi, '\n\n#### $1\n\n');
+  text = text.replace(/<h[5-6][^>]*>([^<]*(?:<(?!\/h[5-6])[^<]*)*)<\/h[5-6]>/gi, '\n\n##### $1\n\n');
 
-  // Bold/strong text — often used as section labels or speaker names in interview docs
-  text = text.replace(/<strong[^>]*>([\s\S]*?)<\/strong>/gi, '**$1**');
-  text = text.replace(/<b[^>]*>([\s\S]*?)<\/b>/gi, '**$1**');
+  text = text.replace(/<strong[^>]*>([^<]*(?:<(?!\/strong)[^<]*)*)<\/strong>/gi, '**$1**');
+  text = text.replace(/<b[^>]*>([^<]*(?:<(?!\/b)[^<]*)*)<\/b>/gi, '**$1**');
 
-  // Table rows → pipe-separated so table content is readable
-  text = text.replace(/<tr[^>]*>([\s\S]*?)<\/tr>/gi, (_, row: string) => {
-    const cells = row.match(/<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi) || [];
-    const cellTexts = cells.map((c: string) =>
-      c.replace(/<[^>]+>/g, '').trim(),
-    );
-    return cellTexts.join(' | ') + '\n';
+  // Tables: process row by row, split cells by closing tags
+  text = text.replace(/<tr[^>]*>(.*?)<\/tr>/gis, (_, row: string) => {
+    const cells: string[] = [];
+    row.replace(/<t[dh][^>]*>(.*?)<\/t[dh]>/gis, (__, cell: string) => {
+      cells.push(cell.replace(/<[^>]+>/g, '').trim());
+      return '';
+    });
+    return cells.length > 0 ? cells.join(' | ') + '\n' : '';
   });
-  text = text.replace(/<\/?table[^>]*>/gi, '\n');
-  text = text.replace(/<\/?thead[^>]*>/gi, '');
-  text = text.replace(/<\/?tbody[^>]*>/gi, '');
+  text = text.replace(/<\/?(?:table|thead|tbody)[^>]*>/gi, '\n');
 
-  // List items
-  text = text.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, '- $1\n');
+  text = text.replace(/<li[^>]*>(.*?)<\/li>/gis, '- $1\n');
   text = text.replace(/<\/?[ou]l[^>]*>/gi, '\n');
 
-  // Paragraphs and line breaks
   text = text.replace(/<br\s*\/?>/gi, '\n');
   text = text.replace(/<\/p>/gi, '\n\n');
   text = text.replace(/<p[^>]*>/gi, '');
 
-  // Strip remaining HTML tags
   text = text.replace(/<[^>]+>/g, '');
 
-  // Decode common HTML entities
   text = text
     .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
@@ -66,7 +60,6 @@ function htmlToStructuredText(html: string): string {
     .replace(/&#39;/g, "'")
     .replace(/&nbsp;/g, ' ');
 
-  // Collapse excessive blank lines but keep paragraph separation
   text = text.replace(/\n{4,}/g, '\n\n\n');
   text = text.replace(/[ \t]+\n/g, '\n');
 
@@ -176,7 +169,7 @@ export class AiController {
     );
 
     const ext = file.originalname.split('.').pop()?.toLowerCase() ?? '';
-    let text: string;
+    let text = '';
 
     try {
       if (ext === 'docx' || ext === 'doc') {
