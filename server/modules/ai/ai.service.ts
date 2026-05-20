@@ -187,16 +187,62 @@ export class AiService {
       `AI config: model=${this.aiModel}, baseUrl=${this.baseUrl}, apiKey=${this.apiKey ? '***' + this.apiKey.slice(-4) : 'EMPTY'}`,
     );
 
-    const userMessage = `以下是用户研究文档的内容（已保留标题层级、表格、加粗等结构标记）。请仔细阅读每个品牌标题下的所有段落和表格，逐条提取VOC。
+    const CHUNK_SIZE = 6000;
+    const chunks = this.splitTextIntoChunks(textContent, CHUNK_SIZE);
+    this.logger.log(`Split text into ${chunks.length} chunks (limit ${CHUNK_SIZE} chars each)`);
+
+    const allVOCs: VOCItem[] = [];
+
+    for (let i = 0; i < chunks.length; i++) {
+      const chunk = chunks[i];
+      this.logger.log(`Processing chunk ${i + 1}/${chunks.length} (${chunk.length} chars)`);
+
+      try {
+        const vocItems = await this.extractVOCsFromChunk(chunk);
+        allVOCs.push(...vocItems);
+        this.logger.log(`Chunk ${i + 1} done: ${vocItems.length} VOC items`);
+      } catch (err: any) {
+        this.logger.error(`Chunk ${i + 1} failed: ${err.message}`);
+      }
+    }
+
+    this.logger.log(`Total extracted: ${allVOCs.length} VOC items from ${chunks.length} chunks`);
+    return allVOCs;
+  }
+
+  private splitTextIntoChunks(text: string, maxChars: number): string[] {
+    if (text.length <= maxChars) return [text];
+
+    const chunks: string[] = [];
+    const lines = text.split('\n');
+    let current = '';
+
+    for (const line of lines) {
+      if (current.length + line.length + 1 > maxChars && current.length > 0) {
+        chunks.push(current);
+        // Keep the current heading context for the next chunk
+        const lastHeading = current.match(/(?:^|\n)(#{1,4} .+)(?:\n|$)/g);
+        current = lastHeading ? lastHeading[lastHeading.length - 1].trim() + '\n' : '';
+      }
+      current += (current ? '\n' : '') + line;
+    }
+    if (current.trim()) chunks.push(current);
+
+    return chunks;
+  }
+
+  private async extractVOCsFromChunk(chunkText: string): Promise<VOCItem[]> {
+    const userMessage = `以下是用户研究文档的一个片段。请仔细阅读并逐条提取VOC。
 
 注意：
 - 文档中 # / ## / ### 标记的是标题，用于区分品牌或章节
 - **加粗** 的文字通常是受访者编号或小节标题
 - "| xxx | yyy |" 格式是表格行，表格每行的各列都可能含有用户原话
 - 请从文档原文中逐字复制用户原话到text字段，不要自己概括或改写
+- 如果这个片段中没有可提取的VOC内容，返回空数组 []
 
-文档内容：
-${textContent}`;
+文档片段：
+${chunkText}`;
 
     let response: any;
     try {
@@ -208,7 +254,7 @@ ${textContent}`;
             { role: 'system', content: VOC_EXTRACTION_PROMPT },
             { role: 'user', content: userMessage },
           ],
-          max_tokens: 32768,
+          max_tokens: 16384,
           temperature: 0.1,
         },
         {
@@ -216,7 +262,7 @@ ${textContent}`;
             Authorization: `Bearer ${this.apiKey}`,
             'Content-Type': 'application/json',
           },
-          timeout: 180_000,
+          timeout: 120_000,
         },
       );
     } catch (err: any) {
@@ -231,23 +277,14 @@ ${textContent}`;
     const choice = response.data?.choices?.[0];
     const finishReason = choice?.finish_reason ?? 'unknown';
     const raw = choice?.message?.content?.trim() ?? '';
-    this.logger.log(`AI response: ${raw.length} chars, finish_reason=${finishReason}, preview: ${raw.slice(0, 300)}`);
-
-    if (finishReason === 'length') {
-      this.logger.warn('AI response was truncated (finish_reason=length), JSON may be incomplete');
-    }
+    this.logger.log(`AI response: ${raw.length} chars, finish_reason=${finishReason}`);
 
     if (!raw) {
-      this.logger.error('AI returned empty response content');
-      this.logger.debug(`Full response data: ${JSON.stringify(response.data).slice(0, 1000)}`);
+      this.logger.warn('AI returned empty response for chunk');
       return [];
     }
 
     const parsed = this.parseJsonFromResponse(raw);
-
-    if (parsed.length === 0) {
-      this.logger.warn(`JSON parsing returned 0 items. Raw response (first 1000 chars): ${raw.slice(0, 1000)}`);
-    }
 
     const vocItems: VOCItem[] = parsed.map(
       (item: Record<string, unknown>) => ({
@@ -261,7 +298,6 @@ ${textContent}`;
       }),
     );
 
-    this.logger.log(`Extracted ${vocItems.length} VOC items`);
     return vocItems;
   }
 
