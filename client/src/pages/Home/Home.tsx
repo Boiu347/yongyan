@@ -513,28 +513,26 @@ const InsightsPage = ({ project, onParseFiles, onAddFiles, onDeleteFile }: { pro
 
   const getVOCsForSubDimension = (subDimensionTitle: string): VOCItem[] => {
     return project.parsedVOCs.filter(voc => {
-      if (voc.subDimension && subDimensionTitle.includes(voc.subDimension)) return true;
-      const subIdx = currentDimension.subDimensions.findIndex(s => s.title === subDimensionTitle);
-      const dimName = currentDimension.name;
-      if (voc.dimension === dimName) {
-        const vocSubIdx = currentDimension.subDimensions.findIndex(s => voc.subDimension && s.title.includes(voc.subDimension));
-        if (vocSubIdx === -1) return subIdx === 0;
-        return vocSubIdx === subIdx;
-      }
-      return false;
+      if (voc.dimension !== currentDimension.name) return false;
+      if (!voc.subDimension) return false;
+      const vocSub = voc.subDimension.toLowerCase();
+      const targetSub = subDimensionTitle.toLowerCase();
+      if (targetSub.includes(vocSub) || vocSub.includes(targetSub)) return true;
+      const keywords: Record<string, string[]> = {
+        '诉求是什么？': ['诉求', '为什么', '需求', '想要'],
+        '对「启蒙」的要求&态度': ['启蒙', '态度', '要求', '看法'],
+        '「启蒙有效」的标准&预期': ['有效', '标准', '预期', '效果'],
+        '触达渠道：在哪看到的？': ['渠道', '看到', '了解', '触达', '知道'],
+        '吸引卖点：什么内容吸引促使购买？': ['吸引', '卖点', '购买', '打动'],
+        '购前预期：买前希望孩子怎么学？': ['购前', '买前', '希望', '预期'],
+        '使用场景：什么时候学？': ['场景', '什么时候', '使用', '时间'],
+        '优势/好评': ['优势', '好评', '优点', '好', '满意', '喜欢'],
+        '劣势/差评': ['劣势', '差评', '缺点', '不好', '不满', '问题'],
+      };
+      const kws = keywords[subDimensionTitle] || [];
+      return kws.some(kw => vocSub.includes(kw));
     });
   };
-
-  const unmatchedVOCs = project.parsedVOCs.filter(voc => {
-    return !DIMENSIONS.some(dim =>
-      dim.name === voc.dimension || dim.subDimensions.some(sd => voc.subDimension && sd.title.includes(voc.subDimension))
-    );
-  });
-
-  const allVOCsForDimension = project.parsedVOCs.filter(voc => {
-    if (!voc.dimension) return activeDimension === 0;
-    return voc.dimension === currentDimension.name;
-  });
 
   return (
     <div className="p-8 pb-20">
@@ -609,7 +607,7 @@ const InsightsPage = ({ project, onParseFiles, onAddFiles, onDeleteFile }: { pro
 
       <div className="space-y-4">
         {currentDimension.subDimensions.map((subDim) => {
-          const vocs = allVOCsForDimension.length > 0 ? getVOCsForSubDimension(subDim.title) : project.parsedVOCs.filter((_, idx) => idx % currentDimension.subDimensions.length === currentDimension.subDimensions.indexOf(subDim));
+          const vocs = getVOCsForSubDimension(subDim.title);
           const isExpanded = expandedSubDimensions.includes(subDim.title);
 
           return (

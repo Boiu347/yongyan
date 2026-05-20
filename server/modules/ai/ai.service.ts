@@ -13,27 +13,44 @@ export interface VOCItem {
   subDimension?: string;
 }
 
-const VOC_EXTRACTION_PROMPT = `你是一位专业的VOC（用户之声）数据分析专家，请从以下文本内容中提取所有VOC相关的数据，输出为结构化的JSON数组。
+const VOC_EXTRACTION_PROMPT = `你是一位专业的VOC（用户之声）数据分析专家。你的任务是从用户研究文档中【尽可能多地】提取所有VOC相关的数据。
+
+重要：文档中通常按品牌分节（如标题"万物指南"下面就是关于万物指南的所有用户反馈），你需要逐段逐句地扫描每个品牌下的所有内容，不要遗漏任何一条用户表述。
+
+品牌枚举（brand字段只能填以下之一）：
+- 洋葱
+- 妙懂
+- 万物指南（物理十分通）（文本中提到"物理十分通"或"万物指南"都算这个品牌）
+- NB虚拟实验室（NoBook）（文本中提到"NoBook"、"nobook"、"NB"都算这个品牌）
+- 学而思
+- 叫叫
+- 赛先生科学课（文本中提到"赛先生"就算这个品牌）
+- 南开大学AI物理课（文本中提到"南开"、"AI物理"就算这个品牌）
+
+一级维度（dimension字段必须填以下三个之一，不能为空）：
+- 需求认知
+- 购买决策
+- 产品体验
+
+二级维度（subDimension字段必须从对应一级维度下选择，不能为空）：
+- 需求认知下：「诉求是什么？」/「对启蒙的要求&态度」/「启蒙有效的标准&预期」
+- 购买决策下：「触达渠道」/「吸引卖点」/「购前预期」
+- 产品体验下：「使用场景」/「优势好评」/「劣势差评」
+
+分类原则：
+- 用户谈到"为什么要给孩子学"、"希望孩子怎样"、"对教育的态度" → 需求认知
+- 用户谈到"在哪看到的"、"什么吸引了我"、"买之前想的" → 购买决策
+- 用户谈到"孩子怎么用的"、"好在哪"、"不好在哪"、"具体体验" → 产品体验
 
 提取规则：
-1. 品牌(brand)只能是以下枚举值之一：洋葱、妙懂、万物指南（物理十分通）、NB虚拟实验室（NoBook）、学而思、叫叫、赛先生科学课、南开大学AI物理课
-   - 如果文本中提到"物理十分通"，brand填"万物指南（物理十分通）"
-   - 如果文本中提到"NoBook"或"nobook"，brand填"NB虚拟实验室（NoBook）"
-   - 如果文本中提到"赛先生"，brand填"赛先生科学课"
-   - 如果文本中提到"南开"或"AI物理"，brand填"南开大学AI物理课"
-2. 情感倾向(sentiment)只能是以下枚举值之一：positive（正面）、neutral（中性）、negative（负面）
-3. text字段为用户原始表述的完整内容，需逐字逐句完整保留，不得缩写、合并或改写
-4. dimension为问题所属的一级分类维度（需求认知/购买决策/产品体验）
-5. subDimension为维度下的二级子分类，具体对应如下：
-   - 需求认知：诉求是什么？/ 对「启蒙」的要求&态度 / 「启蒙有效」的标准&预期
-   - 购买决策：触达渠道：在哪看到的？/ 吸引卖点：什么内容吸引促使购买？/ 购前预期：买前希望孩子怎么学？
-   - 产品体验：使用场景：什么时候学？/ 优势/好评 / 劣势/差评
-6. respondent字段：如果能从文本中识别出受访者编号（如P1、A01、家长#01等），请填写；否则填空字符串
-7. 每一条独立的用户表述都应作为单独的一条VOC记录，不要将多条用户发言合并为一条
-8. 未明确的字段填空字符串，不要臆造内容
-9. 即使同一受访者谈论同一品牌，只要说了不同内容，就分成多条记录
+1. text字段为用户原始表述，完整保留原话，不缩写不改写
+2. 情感倾向(sentiment)：positive（正面）/ neutral（中性）/ negative（负面）
+3. respondent：如能识别出受访者编号就填，否则填空字符串
+4. 每条独立表述都单独作为一条记录，同一个人说了3句话就是3条记录
+5. dimension和subDimension必须填写，根据内容语义判断属于哪个维度
+6. 宁可多提取也不要遗漏，文档中每个品牌下的每一段用户反馈都要提取
 
-请以JSON数组格式输出，每个对象包含以下字段：
+请以JSON数组格式输出，每个对象包含：
 {brand, text, respondent, sentiment, dimension, subDimension}`;
 
 @Injectable()
@@ -112,15 +129,20 @@ export class AiService {
       `Extracting VOCs from text (${textContent.length} chars)`,
     );
 
+    const userMessage = `以下是用户研究文档的内容。请仔细阅读每个品牌标题下的所有段落，逐条提取VOC。文档中可能按品牌名称分节，每个品牌下会有多条用户的原始反馈，全部都需要提取。
+
+文档内容：
+${textContent}`;
+
     const response = await axios.post(
       `${this.baseUrl}/chat/completions`,
       {
         model: this.aiModel,
         messages: [
           { role: 'system', content: VOC_EXTRACTION_PROMPT },
-          { role: 'user', content: textContent },
+          { role: 'user', content: userMessage },
         ],
-        max_tokens: 16384,
+        max_tokens: 32768,
         temperature: 0.1,
       },
       {
@@ -128,7 +150,7 @@ export class AiService {
           Authorization: `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json',
         },
-        timeout: 120_000,
+        timeout: 180_000,
       },
     );
 
