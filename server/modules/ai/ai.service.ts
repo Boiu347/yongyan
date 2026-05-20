@@ -183,8 +183,14 @@ ${textContent}`;
       throw new Error(`AI 服务调用失败 (${status}): ${data}`);
     }
 
-    const raw = response.data?.choices?.[0]?.message?.content?.trim() ?? '';
-    this.logger.log(`AI response length: ${raw.length} chars, preview: ${raw.slice(0, 200)}`);
+    const choice = response.data?.choices?.[0];
+    const finishReason = choice?.finish_reason ?? 'unknown';
+    const raw = choice?.message?.content?.trim() ?? '';
+    this.logger.log(`AI response: ${raw.length} chars, finish_reason=${finishReason}, preview: ${raw.slice(0, 300)}`);
+
+    if (finishReason === 'length') {
+      this.logger.warn('AI response was truncated (finish_reason=length), JSON may be incomplete');
+    }
 
     if (!raw) {
       this.logger.error('AI returned empty response content');
@@ -348,12 +354,43 @@ ${textContent}`;
 
     jsonStr = jsonStr.trim();
 
+    // If it doesn't start with [ or {, try to find the first JSON array/object
+    if (!jsonStr.startsWith('[') && !jsonStr.startsWith('{')) {
+      const arrStart = jsonStr.indexOf('[');
+      const objStart = jsonStr.indexOf('{');
+      const start = arrStart >= 0 && objStart >= 0
+        ? Math.min(arrStart, objStart)
+        : Math.max(arrStart, objStart);
+      if (start >= 0) {
+        jsonStr = jsonStr.slice(start);
+      }
+    }
+
     try {
       const parsed = JSON.parse(jsonStr);
-      return Array.isArray(parsed) ? parsed : [parsed];
+      if (Array.isArray(parsed)) return parsed;
+      if (parsed && typeof parsed === 'object') {
+        const arrField = Object.values(parsed).find(v => Array.isArray(v));
+        if (arrField) return arrField as Record<string, unknown>[];
+        return [parsed];
+      }
+      return [];
     } catch (err) {
+      // Try to find and extract a JSON array from the response
+      const arrayMatch = raw.match(/\[[\s\S]*\]/);
+      if (arrayMatch) {
+        try {
+          const arr = JSON.parse(arrayMatch[0]);
+          if (Array.isArray(arr)) {
+            this.logger.log(`Recovered JSON array via fallback regex (${arr.length} items)`);
+            return arr;
+          }
+        } catch { /* fall through */ }
+      }
+
       this.logger.error(`Failed to parse AI response as JSON: ${err}`);
-      this.logger.debug(`Raw response: ${raw.slice(0, 500)}`);
+      this.logger.debug(`Raw response (first 500): ${raw.slice(0, 500)}`);
+      this.logger.debug(`Raw response (last 500): ${raw.slice(-500)}`);
       return [];
     }
   }
