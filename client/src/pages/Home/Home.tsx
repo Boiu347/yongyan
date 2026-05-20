@@ -36,6 +36,7 @@ interface VOCItem {
   sentiment: 'positive' | 'neutral' | 'negative';
   dimension?: string;
   subDimension?: string;
+  sourceFileId?: string;
 }
 
 interface SubDimension {
@@ -692,6 +693,8 @@ const Home = () => {
   const [isParsing, setIsParsing] = React.useState(false);
   const [isAddFileDialogOpen, setIsAddFileDialogOpen] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState('qualitative-insights');
+  const [parseProgress, setParseProgress] = React.useState<{ current: number; total: number; fileName: string } | null>(null);
+  const abortRef = React.useRef(false);
 
   React.useEffect(() => {
     const saved = localStorage.getItem('insight_projects');
@@ -733,29 +736,45 @@ const Home = () => {
     setProjectToDelete(null);
   };
 
-  const parseFilesWithAI = async (filesToParse: File[]): Promise<VOCItem[]> => {
+  const parseFilesWithAI = async (filesToParse: File[], fileIds: string[]): Promise<VOCItem[]> => {
     const allVOCs: VOCItem[] = [];
-    for (const file of filesToParse) {
-      toast.info(`正在AI解析: ${file.name}...`);
+    abortRef.current = false;
+
+    for (let i = 0; i < filesToParse.length; i++) {
+      if (abortRef.current) {
+        toast.info(`解析已中止，已完成 ${i}/${filesToParse.length} 个文件`);
+        break;
+      }
+      const file = filesToParse[i];
+      const fileId = fileIds[i];
+      setParseProgress({ current: i + 1, total: filesToParse.length, fileName: file.name });
       try {
         const ft = getFileType(file.name);
         const result = ft === 'audio' || ft === 'video'
           ? await apiTranscribe(file)
           : await apiParseDocument(file);
-        allVOCs.push(...(result.vocList as VOCItem[]));
+        const taggedVOCs = (result.vocList as VOCItem[]).map(v => ({ ...v, sourceFileId: fileId }));
+        allVOCs.push(...taggedVOCs);
         toast.success(`"${file.name}" 解析完成，提取 ${result.vocList.length} 条VOC`);
       } catch (err) {
         toast.error(`"${file.name}" 解析失败: ${err instanceof Error ? err.message : '未知错误'}`);
       }
     }
+    setParseProgress(null);
     return allVOCs;
+  };
+
+  const handleAbortParse = () => {
+    abortRef.current = true;
   };
 
   const handleParseAndCreate = async (projectData: Omit<Project, 'id' | 'parsedVOCs'>, realFiles: File[]) => {
     setIsParsing(true);
     try {
-      const parsedVOCs = await parseFilesWithAI(realFiles);
-      const project: Project = { ...projectData, id: `proj-${Date.now()}`, parsedVOCs };
+      const fileIds = realFiles.map((_, i) => `file-${Date.now()}-${i}`);
+      const projectFiles: ProjectFile[] = realFiles.map((f, i) => ({ id: fileIds[i], name: f.name, type: getFileType(f.name) as const }));
+      const parsedVOCs = await parseFilesWithAI(realFiles, fileIds);
+      const project: Project = { ...projectData, id: `proj-${Date.now()}`, files: [...projectData.files, ...projectFiles], parsedVOCs };
       setProjects(prev => [...prev, project]);
       setActiveProject(project);
       toast.success(`项目创建成功，共解析 ${parsedVOCs.length} 条VOC数据`);
@@ -769,10 +788,12 @@ const Home = () => {
   };
 
   const handleAddFilesToProject = async (realFiles: File[], links: { name: string; link: string }[], parseImmediately: boolean) => {
+    const ts = Date.now();
     const newProjectFiles: ProjectFile[] = [
-      ...realFiles.map((f, i) => ({ id: `file-${Date.now()}-${i}`, name: f.name, type: getFileType(f.name) as const })),
-      ...links.map((l, i) => ({ id: `link-${Date.now()}-${i}`, name: l.name, feishuLink: l.link, type: 'document' as const })),
+      ...realFiles.map((f, i) => ({ id: `file-${ts}-${i}`, name: f.name, type: getFileType(f.name) as const })),
+      ...links.map((l, i) => ({ id: `link-${ts}-${i}`, name: l.name, feishuLink: l.link, type: 'document' as const })),
     ];
+    const fileIds = realFiles.map((_, i) => `file-${ts}-${i}`);
 
     setProjects(prev => prev.map(p => p.id === activeProject.id ? { ...p, files: [...p.files, ...newProjectFiles] } : p));
     toast.success(`已添加 ${newProjectFiles.length} 个文件`);
@@ -780,7 +801,7 @@ const Home = () => {
     if (parseImmediately && realFiles.length > 0) {
       setIsParsing(true);
       try {
-        const newVOCs = await parseFilesWithAI(realFiles);
+        const newVOCs = await parseFilesWithAI(realFiles, fileIds);
         setProjects(prev => prev.map(p => p.id === activeProject.id ? { ...p, parsedVOCs: [...p.parsedVOCs, ...newVOCs] } : p));
         toast.success(`解析完成，共提取 ${newVOCs.length} 条VOC数据`);
       } finally {
@@ -790,8 +811,13 @@ const Home = () => {
   };
 
   const handleDeleteFile = (fileId: string) => {
-    setProjects(prev => prev.map(p => p.id === activeProject.id ? { ...p, files: p.files.filter(f => f.id !== fileId) } : p));
-    toast.success('文件已删除');
+    const vocsToRemove = activeProject.parsedVOCs.filter(v => v.sourceFileId === fileId).length;
+    setProjects(prev => prev.map(p => p.id === activeProject.id ? {
+      ...p,
+      files: p.files.filter(f => f.id !== fileId),
+      parsedVOCs: p.parsedVOCs.filter(v => v.sourceFileId !== fileId),
+    } : p));
+    toast.success(vocsToRemove > 0 ? `文件已删除，同时移除 ${vocsToRemove} 条VOC数据` : '文件已删除');
   };
 
   const handleParseFiles = async () => {
@@ -803,6 +829,27 @@ const Home = () => {
     <div className="min-h-screen bg-gray-50 font-sans text-gray-900 flex">
       <Sidebar projects={projects} activeProject={activeProject} onProjectChange={setActiveProject} onCreateProject={() => setIsCreateDialogOpen(true)} onDeleteProject={handleDeleteProject} activeTab={activeTab} onTabChange={setActiveTab} />
       <main className="flex-1 ml-64 overflow-y-auto h-screen bg-gray-50/50">
+        {parseProgress && (
+          <div className="sticky top-0 z-50 bg-white border-b border-gray-100 px-6 py-3 shadow-sm">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-3">
+                <Loader2 size={16} className="text-indigo-500 animate-spin" />
+                <span className="text-sm font-medium text-gray-700">
+                  正在解析: {parseProgress.fileName} ({parseProgress.current}/{parseProgress.total})
+                </span>
+              </div>
+              <Button size="sm" variant="outline" onClick={handleAbortParse} className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700">
+                中止解析
+              </Button>
+            </div>
+            <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+              <div
+                className="h-full bg-indigo-500 rounded-full transition-all duration-500"
+                style={{ width: `${(parseProgress.current / parseProgress.total) * 100}%` }}
+              />
+            </div>
+          </div>
+        )}
         {projects.length === 0 ? (
           <EmptyState onCreate={() => setIsCreateDialogOpen(true)} />
         ) : (
