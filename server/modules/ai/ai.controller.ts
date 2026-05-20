@@ -13,7 +13,7 @@ import { ConfigService } from '@nestjs/config';
 import { memoryStorage } from 'multer';
 import * as mammoth from 'mammoth';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const pdfParse = require('pdf-parse');
+const { PDFParse } = require('pdf-parse');
 import { AiService, VOCItem } from './ai.service';
 
 /**
@@ -215,8 +215,10 @@ export class AiController {
           text = rawResult.value;
         }
       } else if (ext === 'pdf') {
-        const result = await pdfParse(file.buffer);
+        const parser = new PDFParse({ data: file.buffer });
+        const result = await parser.getText();
         text = result.text;
+        if (parser.destroy) await parser.destroy();
       } else {
         text = file.buffer.toString('utf-8');
       }
