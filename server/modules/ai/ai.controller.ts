@@ -285,11 +285,35 @@ export class AiController {
           const rawResult = await mammoth.extractRawText({ buffer: file.buffer });
           text = rawResult.value;
         }
+
+        const chineseChars = (text.match(/[\u4e00-\u9fff]/g) || []).length;
+        if (!text || text.trim().length < 100 || chineseChars < 20) {
+          this.logger.warn(
+            `DOCX text extraction poor quality: ${text.length} chars, ${chineseChars} Chinese chars. Falling back to AI OCR.`,
+          );
+          const mimeType = ext === 'docx'
+            ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            : 'application/msword';
+          text = await this.aiService.ocrDocument(file.buffer, mimeType, file.originalname);
+        }
       } else if (ext === 'pdf') {
         const parser = new PDFParse({ data: file.buffer });
         const result = await parser.getText();
-        text = result.text;
         if (parser.destroy) await parser.destroy();
+        const pdfText = result.text?.trim() ?? '';
+
+        const chineseChars = (pdfText.match(/[\u4e00-\u9fff]/g) || []).length;
+        const isUsable = pdfText.length > 100 && chineseChars > 20;
+
+        if (isUsable) {
+          text = pdfText;
+          this.logger.log(`PDF text extraction OK: ${pdfText.length} chars, ${chineseChars} Chinese chars`);
+        } else {
+          this.logger.warn(
+            `PDF text extraction poor quality: ${pdfText.length} chars, ${chineseChars} Chinese chars. Falling back to AI OCR.`,
+          );
+          text = await this.aiService.ocrDocument(file.buffer, 'application/pdf', file.originalname);
+        }
       } else {
         text = file.buffer.toString('utf-8');
       }

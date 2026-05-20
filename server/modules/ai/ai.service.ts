@@ -134,6 +134,51 @@ export class AiService {
     return text;
   }
 
+  async ocrDocument(
+    fileBuffer: Buffer,
+    mimeType: string,
+    fileName: string,
+  ): Promise<string> {
+    this.logger.log(`OCR document via AI: ${fileName} (${mimeType}, ${(fileBuffer.length / 1024 / 1024).toFixed(2)} MB)`);
+
+    const base64Content = fileBuffer.toString('base64');
+    const dataUri = `data:${mimeType};base64,${base64Content}`;
+
+    const response = await axios.post(
+      `${this.baseUrl}/chat/completions`,
+      {
+        model: this.transcriptionModel,
+        messages: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'text',
+                text: '请将以下文档中的所有文字内容完整提取出来。保留原始的标题层级结构（用#标记）、表格（用|分隔列）和列表（用-标记）。完整保留每一句话，不要遗漏、不要概括、不要改写。只输出文档中的文字内容。',
+              },
+              {
+                type: 'image_url',
+                image_url: { url: dataUri },
+              },
+            ],
+          },
+        ],
+        max_tokens: 32768,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        timeout: 300_000,
+      },
+    );
+
+    const text = response.data?.choices?.[0]?.message?.content?.trim() ?? '';
+    this.logger.log(`OCR complete for ${fileName}: ${text.length} chars`);
+    return text;
+  }
+
   async extractVOCs(textContent: string): Promise<VOCItem[]> {
     this.logger.log(
       `Extracting VOCs from text (${textContent.length} chars)`,
