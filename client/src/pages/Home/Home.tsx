@@ -74,18 +74,29 @@ async function apiTranscribe(file: File, signal?: AbortSignal): Promise<{ text: 
     const err = await res.json().catch(() => ({}));
     throw new Error(err?.error?.message || err?.message || `服务端错误 (${res.status})`);
   }
-  return res.json();
+  const raw = await res.text();
+  const data = JSON.parse(raw.trim());
+  if (data.error) {
+    throw new Error(data.error);
+  }
+  return data;
 }
 
-async function apiParseDocument(file: File, signal?: AbortSignal): Promise<{ text: string; vocList: VOCItem[] }> {
+async function apiParseDocumentText(file: File, signal?: AbortSignal): Promise<{ text: string }> {
   const formData = new FormData();
   formData.append('file', file);
-  const res = await fetch('/api/ai/parse-document', { method: 'POST', body: formData, signal });
+  const res = await fetch('/api/ai/parse-document-text', { method: 'POST', body: formData, signal });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err?.error?.message || err?.message || `服务端错误 (${res.status})`);
   }
   return res.json();
+}
+
+async function apiParseDocument(file: File, signal?: AbortSignal): Promise<{ text: string; vocList: VOCItem[] }> {
+  const { text } = await apiParseDocumentText(file, signal);
+  const { vocList } = await apiExtractVocs(text, signal);
+  return { text, vocList };
 }
 
 async function apiExtractVocs(text: string, signal?: AbortSignal): Promise<{ vocList: VOCItem[] }> {
@@ -99,7 +110,12 @@ async function apiExtractVocs(text: string, signal?: AbortSignal): Promise<{ voc
     const err = await res.json().catch(() => ({}));
     throw new Error(err?.error?.message || err?.message || `服务端错误 (${res.status})`);
   }
-  return res.json();
+  const raw = await res.text();
+  const data = JSON.parse(raw.trim());
+  if (data.error) {
+    throw new Error(data.error);
+  }
+  return data;
 }
 
 function formatElapsed(ms: number): string {

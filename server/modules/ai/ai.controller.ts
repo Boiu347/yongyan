@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Body,
+  Res,
   UploadedFile,
   UseInterceptors,
   BadRequestException,
@@ -10,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ConfigService } from '@nestjs/config';
+import type { Response } from 'express';
 import { memoryStorage } from 'multer';
 import * as mammoth from 'mammoth';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -138,7 +140,8 @@ export class AiController {
   )
   async transcribe(
     @UploadedFile() file: Express.Multer.File,
-  ): Promise<{ text: string; vocList: VOCItem[] }> {
+    @Res() res: Response,
+  ) {
     if (!file) {
       throw new BadRequestException('No file uploaded');
     }
@@ -147,15 +150,30 @@ export class AiController {
       `Transcribe request: ${file.originalname} (${file.mimetype}, ${file.size} bytes)`,
     );
 
-    const text = await this.aiService.transcribeAudio(
-      file.buffer,
-      file.mimetype,
-      file.originalname,
-    );
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('X-Accel-Buffering', 'no');
 
-    const vocList = await this.aiService.extractVOCs(text);
+    const keepAlive = setInterval(() => {
+      if (!res.writableEnded) res.write(' ');
+    }, 10_000);
 
-    return { text, vocList };
+    try {
+      const text = await this.aiService.transcribeAudio(
+        file.buffer,
+        file.mimetype,
+        file.originalname,
+      );
+
+      const vocList = await this.aiService.extractVOCs(text);
+      clearInterval(keepAlive);
+      res.end(JSON.stringify({ text, vocList }));
+    } catch (err: any) {
+      clearInterval(keepAlive);
+      if (!res.writableEnded) {
+        const msg = err?.response?.message || err?.message || '转录失败';
+        res.end(JSON.stringify({ error: { message: msg }, text: '', vocList: [] }));
+      }
+    }
   }
 
   @Post('parse-document')
@@ -180,7 +198,8 @@ export class AiController {
   )
   async parseDocument(
     @UploadedFile() file: Express.Multer.File,
-  ): Promise<{ text: string; vocList: VOCItem[] }> {
+    @Res() res: Response,
+  ) {
     if (!file) {
       throw new BadRequestException('No file uploaded');
     }
@@ -189,15 +208,68 @@ export class AiController {
       `Parse document request: ${file.originalname} (${file.mimetype}, ${file.size} bytes)`,
     );
 
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('X-Accel-Buffering', 'no');
+
+    const keepAlive = setInterval(() => {
+      if (!res.writableEnded) res.write(' ');
+    }, 10_000);
+
+    try {
+      const text = await this.extractTextFromFile(file);
+      const vocList = await this.aiService.extractVOCs(text);
+      clearInterval(keepAlive);
+      res.end(JSON.stringify({ text, vocList }));
+    } catch (err: any) {
+      clearInterval(keepAlive);
+      if (!res.writableEnded) {
+        const msg = err?.response?.message || err?.message || '解析失败';
+        res.end(JSON.stringify({ error: { message: msg }, text: '', vocList: [] }));
+      }
+    }
+  }
+
+  @Post('parse-document-text')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: memoryStorage(),
+      limits: { fileSize: 10 * 1024 * 1024 },
+      fileFilter: (_req, file, cb) => {
+        const ext = file.originalname.split('.').pop()?.toLowerCase() ?? '';
+        if (DOCUMENT_EXTENSIONS.has(ext)) {
+          cb(null, true);
+        } else {
+          cb(
+            new BadRequestException(
+              `Unsupported document type: .${ext}`,
+            ),
+            false,
+          );
+        }
+      },
+    }),
+  )
+  async parseDocumentTextOnly(
+    @UploadedFile() file: Express.Multer.File,
+  ): Promise<{ text: string }> {
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+
+    this.logger.log(
+      `Parse document (text-only) request: ${file.originalname} (${file.mimetype}, ${file.size} bytes)`,
+    );
+
+    const text = await this.extractTextFromFile(file);
+    return { text };
+  }
+
+  private async extractTextFromFile(file: Express.Multer.File): Promise<string> {
     const ext = file.originalname.split('.').pop()?.toLowerCase() ?? '';
     let text = '';
 
     try {
       if (ext === 'docx' || ext === 'doc') {
-        // Use convertToHtml to preserve headings, tables, lists, and bold text,
-        // then convert to structured plain text. extractRawText strips all
-        // structure, making it impossible for the AI to locate brand sections
-        // and verbatim user quotes.
         const htmlResult = await mammoth.convertToHtml({ buffer: file.buffer });
 
         if (htmlResult.messages?.length) {
@@ -209,7 +281,6 @@ export class AiController {
         if (htmlResult.value && htmlResult.value.trim().length > 0) {
           text = htmlToStructuredText(htmlResult.value);
         } else {
-          // Fallback: try raw text extraction in case convertToHtml returned empty
           this.logger.warn('convertToHtml returned empty, falling back to extractRawText');
           const rawResult = await mammoth.extractRawText({ buffer: file.buffer });
           text = rawResult.value;
@@ -235,18 +306,15 @@ export class AiController {
       throw new BadRequestException('文档内容为空，无法提取VOC数据');
     }
 
-    // Log a preview for debugging extraction issues
     this.logger.debug(`Document preview (first 500 chars): ${text.slice(0, 500)}`);
-
-    const vocList = await this.aiService.extractVOCs(text);
-
-    return { text, vocList };
+    return text;
   }
 
   @Post('extract-vocs')
   async extractVocs(
+    @Res() res: Response,
     @Body() body: { text: string },
-  ): Promise<{ vocList: VOCItem[] }> {
+  ) {
     if (!body.text || typeof body.text !== 'string') {
       throw new BadRequestException('Request body must contain a "text" string');
     }
@@ -255,31 +323,82 @@ export class AiController {
       `Extract VOCs request: ${body.text.length} chars`,
     );
 
-    const vocList = await this.aiService.extractVOCs(body.text);
-    return { vocList };
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('X-Accel-Buffering', 'no');
+
+    const keepAlive = setInterval(() => {
+      if (!res.writableEnded) res.write(' ');
+    }, 10_000);
+
+    try {
+      const vocList = await this.aiService.extractVOCs(body.text);
+      clearInterval(keepAlive);
+      res.end(JSON.stringify({ vocList }));
+    } catch (err: any) {
+      clearInterval(keepAlive);
+      if (!res.writableEnded) {
+        res.end(JSON.stringify({ vocList: [], error: err.message || 'AI extraction failed' }));
+      }
+    }
   }
 
   @Post('generate-report')
   async generateReport(
+    @Res() res: Response,
     @Body() body: { vocItems: VOCItem[] },
-  ): Promise<Record<string, { coreFindings: string[]; typicalAttitudes: string[]; strengths: string[]; painPoints: string[] }>> {
+  ) {
     if (!body.vocItems || !Array.isArray(body.vocItems)) {
       throw new BadRequestException('Request body must contain a "vocItems" array');
     }
 
     this.logger.log(`Generate report request: ${body.vocItems.length} VOC items`);
-    return this.aiService.generateBrandReport(body.vocItems);
+
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('X-Accel-Buffering', 'no');
+
+    const keepAlive = setInterval(() => {
+      if (!res.writableEnded) res.write(' ');
+    }, 10_000);
+
+    try {
+      const report = await this.aiService.generateBrandReport(body.vocItems);
+      clearInterval(keepAlive);
+      res.end(JSON.stringify(report));
+    } catch (err: any) {
+      clearInterval(keepAlive);
+      if (!res.writableEnded) {
+        res.end(JSON.stringify({ error: { message: err.message || '生成报告失败' } }));
+      }
+    }
   }
 
   @Post('generate-summary')
   async generateSummary(
+    @Res() res: Response,
     @Body() body: { vocItems: VOCItem[]; projectName: string },
-  ): Promise<{ coreFindings: string[]; actionItems: string[]; methodology: string }> {
+  ) {
     if (!body.vocItems || !Array.isArray(body.vocItems)) {
       throw new BadRequestException('Request body must contain a "vocItems" array');
     }
 
     this.logger.log(`Generate summary request: ${body.vocItems.length} VOC items for "${body.projectName}"`);
-    return this.aiService.generateProjectSummary(body.vocItems, body.projectName || '未命名项目');
+
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('X-Accel-Buffering', 'no');
+
+    const keepAlive = setInterval(() => {
+      if (!res.writableEnded) res.write(' ');
+    }, 10_000);
+
+    try {
+      const summary = await this.aiService.generateProjectSummary(body.vocItems, body.projectName || '未命名项目');
+      clearInterval(keepAlive);
+      res.end(JSON.stringify(summary));
+    } catch (err: any) {
+      clearInterval(keepAlive);
+      if (!res.writableEnded) {
+        res.end(JSON.stringify({ error: { message: err.message || '生成总结失败' } }));
+      }
+    }
   }
 }
