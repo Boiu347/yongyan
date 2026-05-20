@@ -66,10 +66,10 @@ interface Project {
 }
 
 // --- API helpers ---
-async function apiTranscribe(file: File): Promise<{ text: string; vocList: VOCItem[] }> {
+async function apiTranscribe(file: File, signal?: AbortSignal): Promise<{ text: string; vocList: VOCItem[] }> {
   const formData = new FormData();
   formData.append('file', file);
-  const res = await fetch('/api/ai/transcribe', { method: 'POST', body: formData });
+  const res = await fetch('/api/ai/transcribe', { method: 'POST', body: formData, signal });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err?.error?.message || err?.message || `服务端错误 (${res.status})`);
@@ -77,10 +77,10 @@ async function apiTranscribe(file: File): Promise<{ text: string; vocList: VOCIt
   return res.json();
 }
 
-async function apiParseDocument(file: File): Promise<{ text: string; vocList: VOCItem[] }> {
+async function apiParseDocument(file: File, signal?: AbortSignal): Promise<{ text: string; vocList: VOCItem[] }> {
   const formData = new FormData();
   formData.append('file', file);
-  const res = await fetch('/api/ai/parse-document', { method: 'POST', body: formData });
+  const res = await fetch('/api/ai/parse-document', { method: 'POST', body: formData, signal });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err?.error?.message || err?.message || `服务端错误 (${res.status})`);
@@ -88,17 +88,24 @@ async function apiParseDocument(file: File): Promise<{ text: string; vocList: VO
   return res.json();
 }
 
-async function apiExtractVocs(text: string): Promise<{ vocList: VOCItem[] }> {
+async function apiExtractVocs(text: string, signal?: AbortSignal): Promise<{ vocList: VOCItem[] }> {
   const res = await fetch('/api/ai/extract-vocs', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ text }),
+    signal,
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err?.error?.message || err?.message || `服务端错误 (${res.status})`);
   }
   return res.json();
+}
+
+function formatElapsed(ms: number): string {
+  const s = Math.floor(ms / 1000);
+  if (s < 60) return `${s}秒`;
+  return `${Math.floor(s / 60)}分${s % 60}秒`;
 }
 
 // --- Constants ---
@@ -693,8 +700,16 @@ const Home = () => {
   const [isParsing, setIsParsing] = React.useState(false);
   const [isAddFileDialogOpen, setIsAddFileDialogOpen] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState('qualitative-insights');
-  const [parseProgress, setParseProgress] = React.useState<{ current: number; total: number; fileName: string } | null>(null);
-  const abortRef = React.useRef(false);
+  const [parseProgress, setParseProgress] = React.useState<{
+    current: number;
+    total: number;
+    fileName: string;
+    stage: 'uploading' | 'ai-extracting' | 'done';
+    startTime: number;
+    fileStartTime: number;
+  } | null>(null);
+  const [elapsed, setElapsed] = React.useState(0);
+  const abortControllerRef = React.useRef<AbortController | null>(null);
 
   React.useEffect(() => {
     const saved = localStorage.getItem('insight_projects');
@@ -717,6 +732,16 @@ const Home = () => {
     if (fresh && fresh !== activeProject) setActiveProject(fresh);
   }, [projects]);
 
+  // tick elapsed time while parsing
+  React.useEffect(() => {
+    if (!parseProgress) { setElapsed(0); return; }
+    setElapsed(Date.now() - parseProgress.startTime);
+    const timer = setInterval(() => {
+      setElapsed(Date.now() - parseProgress.startTime);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [parseProgress?.startTime, parseProgress !== null]);
+
   const handleCreateProject = (newProject: Omit<Project, 'id' | 'parsedVOCs'>) => {
     const project: Project = { ...newProject, id: `proj-${Date.now()}`, parsedVOCs: [] };
     setProjects(prev => [...prev, project]);
@@ -738,34 +763,62 @@ const Home = () => {
 
   const parseFilesWithAI = async (filesToParse: File[], fileIds: string[]): Promise<VOCItem[]> => {
     const allVOCs: VOCItem[] = [];
-    abortRef.current = false;
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+    const startTime = Date.now();
 
     for (let i = 0; i < filesToParse.length; i++) {
-      if (abortRef.current) {
+      if (controller.signal.aborted) {
         toast.info(`解析已中止，已完成 ${i}/${filesToParse.length} 个文件`);
         break;
       }
       const file = filesToParse[i];
       const fileId = fileIds[i];
-      setParseProgress({ current: i + 1, total: filesToParse.length, fileName: file.name });
+      const fileStartTime = Date.now();
+
+      setParseProgress({
+        current: i + 1,
+        total: filesToParse.length,
+        fileName: file.name,
+        stage: 'uploading',
+        startTime,
+        fileStartTime,
+      });
+
       try {
         const ft = getFileType(file.name);
+
+        setParseProgress(prev => prev ? { ...prev, stage: 'ai-extracting' } : prev);
+
         const result = ft === 'audio' || ft === 'video'
-          ? await apiTranscribe(file)
-          : await apiParseDocument(file);
+          ? await apiTranscribe(file, controller.signal)
+          : await apiParseDocument(file, controller.signal);
+
         const taggedVOCs = (result.vocList as VOCItem[]).map(v => ({ ...v, sourceFileId: fileId }));
         allVOCs.push(...taggedVOCs);
-        toast.success(`"${file.name}" 解析完成，提取 ${result.vocList.length} 条VOC`);
+
+        const fileDuration = formatElapsed(Date.now() - fileStartTime);
+        toast.success(`"${file.name}" 解析完成，提取 ${result.vocList.length} 条VOC（耗时 ${fileDuration}）`);
       } catch (err) {
+        if (err instanceof DOMException && err.name === 'AbortError') {
+          toast.info(`解析已中止，已完成 ${i}/${filesToParse.length} 个文件`);
+          break;
+        }
         toast.error(`"${file.name}" 解析失败: ${err instanceof Error ? err.message : '未知错误'}`);
       }
     }
+
+    abortControllerRef.current = null;
     setParseProgress(null);
     return allVOCs;
   };
 
   const handleAbortParse = () => {
-    abortRef.current = true;
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+      toast.info('正在中止解析...');
+    }
   };
 
   const handleParseAndCreate = async (projectData: Omit<Project, 'id' | 'parsedVOCs'>, realFiles: File[]) => {
@@ -829,27 +882,34 @@ const Home = () => {
     <div className="min-h-screen bg-gray-50 font-sans text-gray-900 flex">
       <Sidebar projects={projects} activeProject={activeProject} onProjectChange={setActiveProject} onCreateProject={() => setIsCreateDialogOpen(true)} onDeleteProject={handleDeleteProject} activeTab={activeTab} onTabChange={setActiveTab} />
       <main className="flex-1 ml-64 overflow-y-auto h-screen bg-gray-50/50">
-        {parseProgress && (
-          <div className="sticky top-0 z-50 bg-white border-b border-gray-100 px-6 py-3 shadow-sm">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-3">
-                <Loader2 size={16} className="text-indigo-500 animate-spin" />
-                <span className="text-sm font-medium text-gray-700">
-                  正在解析: {parseProgress.fileName} ({parseProgress.current}/{parseProgress.total})
-                </span>
+        {parseProgress && (() => {
+          const basePct = ((parseProgress.current - 1) / parseProgress.total) * 100;
+          const stagePct = parseProgress.stage === 'ai-extracting' ? 50 : 10;
+          const pct = Math.min(99, Math.round(basePct + stagePct / parseProgress.total));
+          const stageText = parseProgress.stage === 'uploading' ? '上传文件中...' : 'AI 提取VOC中...';
+          const fileTime = formatElapsed(Date.now() - parseProgress.fileStartTime);
+          return (
+            <div className="sticky top-0 z-50 bg-white border-b border-gray-100 px-6 py-4 shadow-sm">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-3">
+                  <Loader2 size={16} className="text-indigo-500 animate-spin" />
+                  <span className="text-sm font-medium text-gray-700">{parseProgress.fileName}</span>
+                  <span className="text-xs text-gray-400">（{parseProgress.current}/{parseProgress.total}）</span>
+                </div>
+                <Button size="sm" variant="outline" onClick={handleAbortParse} className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700">中止解析</Button>
               </div>
-              <Button size="sm" variant="outline" onClick={handleAbortParse} className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700">
-                中止解析
-              </Button>
+              <div className="flex items-center gap-3 mb-2">
+                <span className="text-xs font-medium text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">{stageText}</span>
+                <span className="text-xs text-gray-400">当前文件 {fileTime}</span>
+                <span className="text-xs text-gray-400">· 总耗时 {formatElapsed(elapsed)}</span>
+                <span className="ml-auto text-xs font-bold text-gray-600">{pct}%</span>
+              </div>
+              <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-indigo-500 to-indigo-400 rounded-full transition-all duration-700" style={{ width: `${pct}%` }} />
+              </div>
             </div>
-            <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
-              <div
-                className="h-full bg-indigo-500 rounded-full transition-all duration-500"
-                style={{ width: `${(parseProgress.current / parseProgress.total) * 100}%` }}
-              />
-            </div>
-          </div>
-        )}
+          );
+        })()}
         {projects.length === 0 ? (
           <EmptyState onCreate={() => setIsCreateDialogOpen(true)} />
         ) : (
