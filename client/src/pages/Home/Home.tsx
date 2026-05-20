@@ -794,11 +794,16 @@ const Home = () => {
           ? await apiTranscribe(file, controller.signal)
           : await apiParseDocument(file, controller.signal);
 
-        const taggedVOCs = (result.vocList as VOCItem[]).map(v => ({ ...v, sourceFileId: fileId }));
+        const vocList = result.vocList ?? [];
+        const taggedVOCs = (vocList as VOCItem[]).map(v => ({ ...v, sourceFileId: fileId }));
         allVOCs.push(...taggedVOCs);
 
         const fileDuration = formatElapsed(Date.now() - fileStartTime);
-        toast.success(`"${file.name}" 解析完成，提取 ${result.vocList.length} 条VOC（耗时 ${fileDuration}）`);
+        if (vocList.length > 0) {
+          toast.success(`"${file.name}" 解析完成，提取 ${vocList.length} 条VOC（耗时 ${fileDuration}）`);
+        } else {
+          toast.warning(`"${file.name}" 解析完成但未提取到VOC数据，可能是AI服务异常或文档内容不匹配（耗时 ${fileDuration}）`);
+        }
       } catch (err) {
         if (err instanceof DOMException && err.name === 'AbortError') {
           toast.info(`解析已中止，已完成 ${i}/${filesToParse.length} 个文件`);

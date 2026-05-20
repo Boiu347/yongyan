@@ -1,5 +1,6 @@
 import {
   Controller,
+  Get,
   Post,
   Body,
   UploadedFile,
@@ -8,6 +9,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { ConfigService } from '@nestjs/config';
 import { memoryStorage } from 'multer';
 import * as mammoth from 'mammoth';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -94,7 +96,26 @@ const DOCUMENT_EXTENSIONS = new Set([
 export class AiController {
   private readonly logger = new Logger(AiController.name);
 
-  constructor(private readonly aiService: AiService) {}
+  constructor(
+    private readonly aiService: AiService,
+    private readonly configService: ConfigService,
+  ) {}
+
+  @Get('health')
+  healthCheck() {
+    const gateway = this.configService.get<string>('AI_GATEWAY_URL', '');
+    const apiKey = this.configService.get<string>('AI_API_KEY', '');
+    const model = this.configService.get<string>('AI_MODEL', '');
+    return {
+      status: 'ok',
+      config: {
+        AI_GATEWAY_URL: gateway || '(empty)',
+        AI_API_KEY: apiKey ? `***${apiKey.slice(-4)}` : '(empty)',
+        AI_MODEL: model || '(empty)',
+        TRANSCRIPTION_MODEL: this.configService.get<string>('TRANSCRIPTION_MODEL', '') || '(empty)',
+      },
+    };
+  }
 
   @Post('transcribe')
   @UseInterceptors(

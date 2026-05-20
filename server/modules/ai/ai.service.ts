@@ -138,6 +138,9 @@ export class AiService {
     this.logger.log(
       `Extracting VOCs from text (${textContent.length} chars)`,
     );
+    this.logger.log(
+      `AI config: model=${this.aiModel}, baseUrl=${this.baseUrl}, apiKey=${this.apiKey ? '***' + this.apiKey.slice(-4) : 'EMPTY'}`,
+    );
 
     const userMessage = `以下是用户研究文档的内容（已保留标题层级、表格、加粗等结构标记）。请仔细阅读每个品牌标题下的所有段落和表格，逐条提取VOC。
 
@@ -150,28 +153,50 @@ export class AiService {
 文档内容：
 ${textContent}`;
 
-    const response = await axios.post(
-      `${this.baseUrl}/chat/completions`,
-      {
-        model: this.aiModel,
-        messages: [
-          { role: 'system', content: VOC_EXTRACTION_PROMPT },
-          { role: 'user', content: userMessage },
-        ],
-        max_tokens: 32768,
-        temperature: 0.1,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json',
+    let response: any;
+    try {
+      response = await axios.post(
+        `${this.baseUrl}/chat/completions`,
+        {
+          model: this.aiModel,
+          messages: [
+            { role: 'system', content: VOC_EXTRACTION_PROMPT },
+            { role: 'user', content: userMessage },
+          ],
+          max_tokens: 32768,
+          temperature: 0.1,
         },
-        timeout: 180_000,
-      },
-    );
+        {
+          headers: {
+            Authorization: `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          timeout: 180_000,
+        },
+      );
+    } catch (err: any) {
+      const status = err?.response?.status ?? 'N/A';
+      const data = err?.response?.data
+        ? JSON.stringify(err.response.data).slice(0, 500)
+        : err?.message ?? 'unknown';
+      this.logger.error(`AI Gateway request FAILED: status=${status}, detail=${data}`);
+      throw new Error(`AI 服务调用失败 (${status}): ${data}`);
+    }
 
-    const raw = response.data?.choices?.[0]?.message?.content?.trim() ?? '[]';
+    const raw = response.data?.choices?.[0]?.message?.content?.trim() ?? '';
+    this.logger.log(`AI response length: ${raw.length} chars, preview: ${raw.slice(0, 200)}`);
+
+    if (!raw) {
+      this.logger.error('AI returned empty response content');
+      this.logger.debug(`Full response data: ${JSON.stringify(response.data).slice(0, 1000)}`);
+      return [];
+    }
+
     const parsed = this.parseJsonFromResponse(raw);
+
+    if (parsed.length === 0) {
+      this.logger.warn(`JSON parsing returned 0 items. Raw response (first 1000 chars): ${raw.slice(0, 1000)}`);
+    }
 
     const vocItems: VOCItem[] = parsed.map(
       (item: Record<string, unknown>) => ({
