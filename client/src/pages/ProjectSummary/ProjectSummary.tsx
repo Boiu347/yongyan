@@ -12,6 +12,8 @@ import {
   Download,
   Edit3,
   Save,
+  Plus,
+  Trash2,
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { toast } from 'sonner';
@@ -253,6 +255,14 @@ const ProjectSummary = ({ project }: { project: Project }) => {
               <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-50 text-amber-600 text-xs rounded-full">
                 <Sparkles size={10} />AI生成
               </span>
+              {isEditing && (
+                <button
+                  onClick={() => setEditForm(prev => prev ? { ...prev, coreFindings: [...prev.coreFindings, ''] } : prev)}
+                  className="ml-auto flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors"
+                >
+                  <Plus size={14} />添加一条
+                </button>
+              )}
             </div>
             <div className="space-y-4">
               {(isEditing ? editForm?.coreFindings : summaryData.coreFindings)?.map((finding, index) => (
@@ -261,15 +271,26 @@ const ProjectSummary = ({ project }: { project: Project }) => {
                     {index + 1}
                   </span>
                   {isEditing ? (
-                    <Input
-                      value={finding}
-                      onChange={(e) => {
-                        const findings = [...(editForm?.coreFindings || [])];
-                        findings[index] = e.target.value;
-                        setEditForm(prev => prev ? { ...prev, coreFindings: findings } : prev);
-                      }}
-                      className="flex-1"
-                    />
+                    <>
+                      <Input
+                        value={finding}
+                        onChange={(e) => {
+                          const findings = [...(editForm?.coreFindings || [])];
+                          findings[index] = e.target.value;
+                          setEditForm(prev => prev ? { ...prev, coreFindings: findings } : prev);
+                        }}
+                        className="flex-1"
+                      />
+                      <button
+                        onClick={() => {
+                          const findings = (editForm?.coreFindings || []).filter((_, i) => i !== index);
+                          setEditForm(prev => prev ? { ...prev, coreFindings: findings } : prev);
+                        }}
+                        className="flex-shrink-0 p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </>
                   ) : (
                     <p className="text-gray-700 leading-relaxed pt-0.5">{finding}</p>
                   )}
@@ -282,6 +303,14 @@ const ProjectSummary = ({ project }: { project: Project }) => {
             <div className="flex items-center gap-2 mb-5">
               <ArrowRight size={20} className="text-green-500" />
               <h3 className="text-lg font-bold text-gray-900">行动建议 / Next Steps</h3>
+              {isEditing && (
+                <button
+                  onClick={() => setEditForm(prev => prev ? { ...prev, actionItems: [...prev.actionItems, ''] } : prev)}
+                  className="ml-auto flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-green-600 bg-green-50 hover:bg-green-100 rounded-lg transition-colors"
+                >
+                  <Plus size={14} />添加一条
+                </button>
+              )}
             </div>
             <div className="space-y-3">
               {(isEditing ? editForm?.actionItems : summaryData.actionItems)?.map((item, index) => (
@@ -290,15 +319,26 @@ const ProjectSummary = ({ project }: { project: Project }) => {
                     {index + 1}
                   </span>
                   {isEditing ? (
-                    <Input
-                      value={item}
-                      onChange={(e) => {
-                        const items = [...(editForm?.actionItems || [])];
-                        items[index] = e.target.value;
-                        setEditForm(prev => prev ? { ...prev, actionItems: items } : prev);
-                      }}
-                      className="flex-1"
-                    />
+                    <>
+                      <Input
+                        value={item}
+                        onChange={(e) => {
+                          const items = [...(editForm?.actionItems || [])];
+                          items[index] = e.target.value;
+                          setEditForm(prev => prev ? { ...prev, actionItems: items } : prev);
+                        }}
+                        className="flex-1"
+                      />
+                      <button
+                        onClick={() => {
+                          const items = (editForm?.actionItems || []).filter((_, i) => i !== index);
+                          setEditForm(prev => prev ? { ...prev, actionItems: items } : prev);
+                        }}
+                        className="flex-shrink-0 p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </>
                   ) : (
                     <p className="text-gray-700 text-sm leading-relaxed">{item}</p>
                   )}
