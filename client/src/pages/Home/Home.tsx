@@ -659,9 +659,9 @@ const InsightsPage = ({ project, onParseFiles, onAddFiles, onDeleteFile, onDelet
             <h3 className="text-xl font-bold text-gray-900">定性洞察</h3>
             <p className="text-gray-500 mt-1">基于用户原声的深度分析</p>
           </div>
-          {!project.dimensionSummaries?.length && project.parsedVOCs.length > 0 && (
+          {project.parsedVOCs.length > 0 && (!project.dimensionSummaries?.length || project.dimensionSummaries.length < 9) && (
             <Button variant="outline" size="sm" onClick={() => onGenerateSummaries?.()}>
-              <Sparkles size={14} className="mr-1.5" />生成维度总结
+              <Sparkles size={14} className="mr-1.5" />{project.dimensionSummaries?.length ? '重新生成总结' : '生成维度总结'}
             </Button>
           )}
         </div>
@@ -690,9 +690,10 @@ const InsightsPage = ({ project, onParseFiles, onAddFiles, onDeleteFile, onDelet
           const isExpanded = expandedSubDimensions.includes(subDim.title);
           const dimSummary = project.dimensionSummaries?.find(s => {
             if (s.dimension !== currentDimension.name) return false;
-            const a = s.subDimension?.toLowerCase() || '';
-            const b = subDim.title.toLowerCase();
-            return a === b || a.includes(b) || b.includes(a) || a.replace(/[：:？?]/g, '').includes(b.replace(/[：:？?]/g, ''));
+            const normalize = (str: string) => str.toLowerCase().replace(/[「」『』""''：:？?/／\s]/g, '');
+            const a = normalize(s.subDimension || '');
+            const b = normalize(subDim.title);
+            return a === b || a.includes(b) || b.includes(a);
           });
 
           return (

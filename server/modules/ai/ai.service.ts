@@ -510,32 +510,46 @@ ${chunkText}`;
   ): Promise<{ summaries: Array<{ dimension: string; subDimension: string; summary: string; brandSummaries: Record<string, string> }>; overallSummary: string }> {
     this.logger.log(`Generating dimension summaries from ${vocItems.length} VOC items`);
 
+    const brandNames = [...new Set(vocItems.map(v => v.brand).filter(Boolean))];
+    const brandListStr = brandNames.length > 0 ? brandNames.join('、') : '洋葱、妙懂、万物指南（物理十分通）、NB虚拟实验室（NoBook）、学而思、叫叫、赛先生科学课、南开大学AI物理课';
+
     const prompt = `你是一位用户研究专家。请根据以下VOC数据，为【每一个】二级维度生成总结。
 
-## 必须覆盖的所有二级维度（共9个，每个都要输出，即使数据较少也要写）：
+## 必须覆盖的所有二级维度（共9个，每个都必须输出，即使数据较少也要写）：
 1. dimension="需求认知", subDimension="诉求是什么？"
-2. dimension="需求认知", subDimension="对启蒙的要求&态度"
-3. dimension="需求认知", subDimension="启蒙有效的标准&预期"
-4. dimension="购买决策", subDimension="触达渠道"
-5. dimension="购买决策", subDimension="吸引卖点"
-6. dimension="购买决策", subDimension="购前预期"
-7. dimension="产品体验", subDimension="使用场景"
-8. dimension="产品体验", subDimension="优势好评"
-9. dimension="产品体验", subDimension="劣势差评"
+2. dimension="需求认知", subDimension="对「启蒙」的要求&态度"
+3. dimension="需求认知", subDimension="「启蒙有效」的标准&预期"
+4. dimension="购买决策", subDimension="触达渠道：在哪看到的？"
+5. dimension="购买决策", subDimension="吸引卖点：什么内容吸引促使购买？"
+6. dimension="购买决策", subDimension="购前预期：买前希望孩子怎么学？"
+7. dimension="产品体验", subDimension="使用场景：什么时候学？"
+8. dimension="产品体验", subDimension="优势/好评"
+9. dimension="产品体验", subDimension="劣势/差评"
 
 ## 每个维度生成：
 - summary：该维度的整体发现（2-3句话概括核心洞察）。如果该维度数据不足，写"该维度数据较少，暂无充分洞察"
-- brandSummaries：该维度下每个出现过的品牌的单独总结（1-2句话）。品牌没有相关数据则不用写
+- brandSummaries：该维度下每个出现过的品牌的单独总结（1-2句话）。品牌名必须使用原始全称：${brandListStr}。品牌没有相关数据则不用写
 
 ## 另外生成：
 - overallSummary：不分品牌、不分维度，从整体研究角度总结核心发现（3-5句话）
 
-输出格式为JSON（必须包含9个summaries条目）：
+## 严格要求：
+- summaries数组必须恰好包含9个条目，顺序与上面一致
+- subDimension字段必须与上面列出的完全一致（包括标点符号「」、/、：等）
+- brandSummaries的key必须使用品牌全称
+
+输出格式为JSON：
 {
   "summaries": [
     { "dimension": "需求认知", "subDimension": "诉求是什么？", "summary": "...", "brandSummaries": {"洋葱": "...", "学而思": "..."} },
-    { "dimension": "需求认知", "subDimension": "对启蒙的要求&态度", "summary": "...", "brandSummaries": {...} },
-    ...共9条
+    { "dimension": "需求认知", "subDimension": "对「启蒙」的要求&态度", "summary": "...", "brandSummaries": {...} },
+    { "dimension": "需求认知", "subDimension": "「启蒙有效」的标准&预期", "summary": "...", "brandSummaries": {...} },
+    { "dimension": "购买决策", "subDimension": "触达渠道：在哪看到的？", "summary": "...", "brandSummaries": {...} },
+    { "dimension": "购买决策", "subDimension": "吸引卖点：什么内容吸引促使购买？", "summary": "...", "brandSummaries": {...} },
+    { "dimension": "购买决策", "subDimension": "购前预期：买前希望孩子怎么学？", "summary": "...", "brandSummaries": {...} },
+    { "dimension": "产品体验", "subDimension": "使用场景：什么时候学？", "summary": "...", "brandSummaries": {...} },
+    { "dimension": "产品体验", "subDimension": "优势/好评", "summary": "...", "brandSummaries": {...} },
+    { "dimension": "产品体验", "subDimension": "劣势/差评", "summary": "...", "brandSummaries": {...} }
   ],
   "overallSummary": "全局总结..."
 }
@@ -566,9 +580,70 @@ ${chunkText}`;
 
     const raw = response.data?.choices?.[0]?.message?.content?.trim() ?? '{}';
     const parsed = this.parseJsonObjectFromResponse(raw);
-    this.logger.log(`Dimension summaries generated: ${(parsed.summaries || []).length} dimensions`);
+    const rawSummaries: Array<{ dimension: string; subDimension: string; summary: string; brandSummaries: Record<string, string> }> = Array.isArray(parsed.summaries) ? parsed.summaries : [];
+    this.logger.log(`Dimension summaries generated: ${rawSummaries.length} dimensions from AI`);
+
+    const CANONICAL_DIMS = [
+      { dimension: '需求认知', subDimension: '诉求是什么？' },
+      { dimension: '需求认知', subDimension: '对「启蒙」的要求&态度' },
+      { dimension: '需求认知', subDimension: '「启蒙有效」的标准&预期' },
+      { dimension: '购买决策', subDimension: '触达渠道：在哪看到的？' },
+      { dimension: '购买决策', subDimension: '吸引卖点：什么内容吸引促使购买？' },
+      { dimension: '购买决策', subDimension: '购前预期：买前希望孩子怎么学？' },
+      { dimension: '产品体验', subDimension: '使用场景：什么时候学？' },
+      { dimension: '产品体验', subDimension: '优势/好评' },
+      { dimension: '产品体验', subDimension: '劣势/差评' },
+    ];
+
+    const normalize = (s: string) => s.toLowerCase().replace(/[「」『』""''：:？?/／\s]/g, '');
+
+    const BRAND_ALIASES: Record<string, string[]> = {
+      '洋葱': ['洋葱', '洋葱学园'],
+      '妙懂': ['妙懂'],
+      '万物指南（物理十分通）': ['万物指南', '物理十分通'],
+      'NB虚拟实验室（NoBook）': ['NB虚拟实验室', 'NoBook', 'NB'],
+      '学而思': ['学而思'],
+      '叫叫': ['叫叫'],
+      '赛先生科学课': ['赛先生', '赛先生科学课'],
+      '南开大学AI物理课': ['南开', 'AI物理', '南开大学AI物理课'],
+    };
+
+    const normalizeBrandSummaries = (raw: Record<string, string>): Record<string, string> => {
+      if (!raw || typeof raw !== 'object') return {};
+      const result: Record<string, string> = {};
+      for (const [key, value] of Object.entries(raw)) {
+        if (!value) continue;
+        let matched = false;
+        for (const [canonical, aliases] of Object.entries(BRAND_ALIASES)) {
+          if (key === canonical || aliases.some(a => key.includes(a) || a.includes(key))) {
+            result[canonical] = value;
+            matched = true;
+            break;
+          }
+        }
+        if (!matched) result[key] = value;
+      }
+      return result;
+    };
+
+    const summaries = CANONICAL_DIMS.map(canonical => {
+      const match = rawSummaries.find(r => {
+        if (r.dimension !== canonical.dimension) return false;
+        const a = normalize(r.subDimension || '');
+        const b = normalize(canonical.subDimension);
+        return a === b || a.includes(b) || b.includes(a);
+      });
+      return {
+        dimension: canonical.dimension,
+        subDimension: canonical.subDimension,
+        summary: match?.summary || '该维度数据较少，暂无充分洞察',
+        brandSummaries: normalizeBrandSummaries(match?.brandSummaries || {}),
+      };
+    });
+
+    this.logger.log(`Dimension summaries normalized: ${summaries.length} dimensions output`);
     return {
-      summaries: Array.isArray(parsed.summaries) ? parsed.summaries : [],
+      summaries,
       overallSummary: typeof parsed.overallSummary === 'string' ? parsed.overallSummary : '',
     };
   }
