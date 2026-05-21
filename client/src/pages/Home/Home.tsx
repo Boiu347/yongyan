@@ -893,18 +893,37 @@ const Home = () => {
   const abortControllerRef = React.useRef<AbortController | null>(null);
 
   React.useEffect(() => {
-    const saved = localStorage.getItem('insight_projects');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        setProjects(parsed);
-        if (parsed.length > 0) setActiveProject(parsed[0]);
-      } catch { /* ignore */ }
-    }
+    fetch('/api/projects').then(res => res.json()).then((serverProjects: Project[]) => {
+      if (Array.isArray(serverProjects) && serverProjects.length > 0) {
+        setProjects(serverProjects);
+        setActiveProject(serverProjects[0]);
+        localStorage.setItem('insight_projects', JSON.stringify(serverProjects));
+      } else {
+        const saved = localStorage.getItem('insight_projects');
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            setProjects(parsed);
+            if (parsed.length > 0) setActiveProject(parsed[0]);
+            fetch('/api/projects/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projects: parsed }) });
+          } catch { /* ignore */ }
+        }
+      }
+    }).catch(() => {
+      const saved = localStorage.getItem('insight_projects');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          setProjects(parsed);
+          if (parsed.length > 0) setActiveProject(parsed[0]);
+        } catch { /* ignore */ }
+      }
+    });
   }, []);
 
   React.useEffect(() => {
     localStorage.setItem('insight_projects', JSON.stringify(projects));
+    fetch('/api/projects/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projects }) }).catch(() => {});
   }, [projects]);
 
   // keep activeProject in sync when projects change
