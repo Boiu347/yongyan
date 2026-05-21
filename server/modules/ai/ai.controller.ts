@@ -425,4 +425,34 @@ export class AiController {
       }
     }
   }
+
+  @Post('generate-dimension-summaries')
+  async generateDimensionSummaries(
+    @Res() res: Response,
+    @Body() body: { vocItems: VOCItem[] },
+  ) {
+    if (!body.vocItems || !Array.isArray(body.vocItems)) {
+      throw new BadRequestException('Request body must contain a "vocItems" array');
+    }
+
+    this.logger.log(`Generate dimension summaries request: ${body.vocItems.length} VOC items`);
+
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('X-Accel-Buffering', 'no');
+
+    const keepAlive = setInterval(() => {
+      if (!res.writableEnded) res.write(' ');
+    }, 10_000);
+
+    try {
+      const result = await this.aiService.generateDimensionSummaries(body.vocItems);
+      clearInterval(keepAlive);
+      res.end(JSON.stringify(result));
+    } catch (err: any) {
+      clearInterval(keepAlive);
+      if (!res.writableEnded) {
+        res.end(JSON.stringify({ summaries: [], overallSummary: '', error: err.message || '生成总结失败' }));
+      }
+    }
+  }
 }

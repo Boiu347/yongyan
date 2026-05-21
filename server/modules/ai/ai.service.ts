@@ -402,6 +402,65 @@ ${chunkText}`;
     };
   }
 
+  async generateDimensionSummaries(
+    vocItems: VOCItem[],
+  ): Promise<{ summaries: Array<{ dimension: string; subDimension: string; summary: string; brandSummaries: Record<string, string> }>; overallSummary: string }> {
+    this.logger.log(`Generating dimension summaries from ${vocItems.length} VOC items`);
+
+    const prompt = `你是一位用户研究专家。请根据以下VOC数据，生成两部分内容：
+
+1. **各维度总结**：按"一级维度-二级维度"分组，为每个有数据的二级维度生成：
+   - summary：该维度下所有品牌的整体发现（2-3句话概括核心洞察）
+   - brandSummaries：该维度下每个出现过的品牌的单独总结（1-2句话）
+
+2. **全局总结**：不分品牌，从整体研究角度总结核心发现（3-5句话）
+
+输出格式为JSON：
+{
+  "summaries": [
+    {
+      "dimension": "需求认知",
+      "subDimension": "诉求是什么？",
+      "summary": "整体总结...",
+      "brandSummaries": { "洋葱": "...", "学而思": "..." }
+    }
+  ],
+  "overallSummary": "全局总结..."
+}
+
+只输出JSON，不要其他文字。`;
+
+    const vocText = vocItems.map(v => `[${v.brand}][${v.sentiment}][${v.dimension || ''} > ${v.subDimension || ''}] ${v.respondent}: ${v.text}`).join('\n');
+
+    const response = await axios.post(
+      `${this.baseUrl}/chat/completions`,
+      {
+        model: this.aiModel,
+        messages: [
+          { role: 'system', content: prompt },
+          { role: 'user', content: vocText },
+        ],
+        max_tokens: 8192,
+        temperature: 0.3,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        timeout: 300_000,
+      },
+    );
+
+    const raw = response.data?.choices?.[0]?.message?.content?.trim() ?? '{}';
+    const parsed = this.parseJsonObjectFromResponse(raw);
+    this.logger.log(`Dimension summaries generated: ${(parsed.summaries || []).length} dimensions`);
+    return {
+      summaries: Array.isArray(parsed.summaries) ? parsed.summaries : [],
+      overallSummary: typeof parsed.overallSummary === 'string' ? parsed.overallSummary : '',
+    };
+  }
+
   async parseDocument(textContent: string): Promise<string> {
     this.logger.log(
       `Parsing document text (${textContent.length} chars)`,

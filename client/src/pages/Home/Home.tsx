@@ -58,12 +58,21 @@ interface ProjectFile {
   type: 'document' | 'audio' | 'video';
 }
 
+interface DimensionSummary {
+  dimension: string;
+  subDimension: string;
+  summary: string;
+  brandSummaries: Record<string, string>;
+}
+
 interface Project {
   id: string;
   name: string;
   dateRange: string;
   files: ProjectFile[];
   parsedVOCs: VOCItem[];
+  dimensionSummaries?: DimensionSummary[];
+  overallSummary?: string;
 }
 
 // --- API helpers ---
@@ -114,6 +123,21 @@ async function apiExtractVocs(text: string, signal?: AbortSignal): Promise<{ voc
   const raw = await res.text();
   const data = JSON.parse(raw.trim());
   if (data.error) {
+    throw new Error(data.error);
+  }
+  return data;
+}
+
+async function apiGenerateDimensionSummaries(vocItems: VOCItem[], signal?: AbortSignal): Promise<{ summaries: DimensionSummary[]; overallSummary: string }> {
+  const res = await fetch('/api/ai/generate-dimension-summaries', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ vocItems }),
+    signal,
+  });
+  const raw = await res.text();
+  const data = JSON.parse(raw.trim());
+  if (data.error && !data.summaries?.length) {
     throw new Error(data.error);
   }
   return data;
@@ -533,8 +557,11 @@ const Sidebar = ({
 const InsightsPage = ({ project, onParseFiles, onAddFiles, onDeleteFile, onDeleteVOC, onEditVOC }: { project: Project; onParseFiles: () => void; onAddFiles: () => void; onDeleteFile: (fileId: string) => void; onDeleteVOC: (vocId: string) => void; onEditVOC: (vocId: string, updates: Partial<VOCItem>) => void }) => {
   const [activeDimension, setActiveDimension] = React.useState(0);
   const [expandedSubDimensions, setExpandedSubDimensions] = React.useState<string[]>([]);
-  const [selectedBrands, setSelectedBrands] = React.useState<Brand[]>(BRANDS.map(b => b.name));
+  const [subDimBrandFilters, setSubDimBrandFilters] = React.useState<Record<string, Brand[]>>({});
   const [editingVOC, setEditingVOC] = React.useState<VOCItem | null>(null);
+
+  const getSelectedBrandsForSubDim = (title: string) => subDimBrandFilters[title] || BRANDS.map(b => b.name);
+  const setSelectedBrandsForSubDim = (title: string, brands: Brand[]) => setSubDimBrandFilters(prev => ({ ...prev, [title]: brands }));
 
   const toggleSubDimension = (title: string) => {
     setExpandedSubDimensions(prev => prev.includes(title) ? prev.filter(t => t !== title) : [...prev, title]);
@@ -624,22 +651,13 @@ const InsightsPage = ({ project, onParseFiles, onAddFiles, onDeleteFile, onDelet
         </div>
       </div>
 
-      <div className="mb-6 bg-gray-50 rounded-xl p-4 flex items-center gap-4 flex-wrap">
-        <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">显示品牌</span>
-        <div className="flex gap-3">
-          {BRANDS.map(brand => (
-            <label key={brand.name} className="flex items-center gap-2 cursor-pointer group">
-              <input type="checkbox" checked={selectedBrands.includes(brand.name)} onChange={(e) => { if (e.target.checked) setSelectedBrands([...selectedBrands, brand.name]); else setSelectedBrands(selectedBrands.filter(b => b !== brand.name)); }} className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
-              <span className="text-sm text-gray-600 group-hover:text-gray-900">{brand.name}</span>
-            </label>
-          ))}
-        </div>
-      </div>
-
       <div className="space-y-4">
         {currentDimension.subDimensions.map((subDim) => {
-          const vocs = getVOCsForSubDimension(subDim.title).filter(v => selectedBrands.includes(v.brand));
+          const selectedBrands = getSelectedBrandsForSubDim(subDim.title);
+          const allVocsForSubDim = getVOCsForSubDimension(subDim.title);
+          const vocs = allVocsForSubDim.filter(v => selectedBrands.includes(v.brand));
           const isExpanded = expandedSubDimensions.includes(subDim.title);
+          const dimSummary = project.dimensionSummaries?.find(s => s.dimension === currentDimension.name && s.subDimension === subDim.title);
 
           return (
             <div key={subDim.title} className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
@@ -649,13 +667,51 @@ const InsightsPage = ({ project, onParseFiles, onAddFiles, onDeleteFile, onDelet
                     {isExpanded ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
                   </div>
                   <span className="text-lg font-semibold text-gray-800">{subDim.title}</span>
-                  <span className="px-2 py-1 bg-gray-100 text-xs text-gray-500 rounded-full">{vocs.length} 条</span>
+                  <span className="px-2 py-1 bg-gray-100 text-xs text-gray-500 rounded-full">{allVocsForSubDim.length} 条</span>
                 </div>
               </button>
               <AnimatePresence>
                 {isExpanded && (
                   <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="border-t border-gray-50">
-                    <div className="p-6 overflow-x-auto">
+                    <div className="p-6">
+                      {dimSummary?.summary && (
+                        <div className="mb-5 p-4 bg-indigo-50/50 border border-indigo-100 rounded-xl">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Sparkles size={14} className="text-indigo-500" />
+                            <span className="text-xs font-bold text-indigo-600 uppercase tracking-wider">AI 洞察总结</span>
+                          </div>
+                          <p className="text-sm text-gray-700 leading-relaxed">{dimSummary.summary}</p>
+                        </div>
+                      )}
+
+                      {dimSummary?.brandSummaries && Object.keys(dimSummary.brandSummaries).length > 0 && (
+                        <div className="mb-5 grid grid-cols-2 gap-3">
+                          {Object.entries(dimSummary.brandSummaries).map(([brand, summary]) => {
+                            const brandInfo = BRANDS.find(b => b.name === brand);
+                            return (
+                              <div key={brand} className="p-3 rounded-lg border border-gray-100" style={{ backgroundColor: brandInfo?.bg || '#f9fafb' }}>
+                                <div className="flex items-center gap-2 mb-1">
+                                  <div className="w-1.5 h-4 rounded-full" style={{ backgroundColor: brandInfo?.color || '#6b7280' }} />
+                                  <span className="text-xs font-bold text-gray-700">{brand}</span>
+                                </div>
+                                <p className="text-xs text-gray-600 leading-relaxed">{summary}</p>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      <div className="mb-4 flex items-center gap-3 flex-wrap">
+                        <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">筛选品牌</span>
+                        {BRANDS.map(brand => (
+                          <label key={brand.name} className="flex items-center gap-1.5 cursor-pointer">
+                            <input type="checkbox" checked={selectedBrands.includes(brand.name)} onChange={(e) => { if (e.target.checked) setSelectedBrandsForSubDim(subDim.title, [...selectedBrands, brand.name]); else setSelectedBrandsForSubDim(subDim.title, selectedBrands.filter(b => b !== brand.name)); }} className="w-3.5 h-3.5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" />
+                            <span className="text-xs text-gray-600">{brand.name}</span>
+                          </label>
+                        ))}
+                      </div>
+
+                      <div className="overflow-x-auto">
                       <div className="flex gap-6 min-w-max">
                         {BRANDS.filter(b => selectedBrands.includes(b.name)).map(brand => {
                           const brandVOCs = vocs.filter(v => v.brand === brand.name);
@@ -697,6 +753,7 @@ const InsightsPage = ({ project, onParseFiles, onAddFiles, onDeleteFile, onDelet
                             </div>
                           );
                         })}
+                      </div>
                       </div>
                     </div>
                   </motion.div>
@@ -940,18 +997,32 @@ const Home = () => {
     }
   };
 
+  const triggerDimensionSummaries = async (projectId: string, vocItems: VOCItem[]) => {
+    if (vocItems.length === 0) return;
+    try {
+      toast.info('正在生成维度总结...');
+      const { summaries, overallSummary } = await apiGenerateDimensionSummaries(vocItems);
+      setProjects(prev => prev.map(p => p.id === projectId ? { ...p, dimensionSummaries: summaries, overallSummary } : p));
+      toast.success('维度总结生成完成');
+    } catch (err) {
+      toast.error(`维度总结生成失败: ${err instanceof Error ? err.message : '未知错误'}`);
+    }
+  };
+
   const handleParseAndCreate = async (projectData: Omit<Project, 'id' | 'parsedVOCs'>, realFiles: File[]) => {
     setIsParsing(true);
+    const projectId = `proj-${Date.now()}`;
     try {
       const fileIds = realFiles.map((_, i) => `file-${Date.now()}-${i}`);
       const projectFiles: ProjectFile[] = realFiles.map((f, i) => ({ id: fileIds[i], name: f.name, type: getFileType(f.name) as const }));
       const parsedVOCs = await parseFilesWithAI(realFiles, fileIds);
-      const project: Project = { ...projectData, id: `proj-${Date.now()}`, files: [...projectData.files, ...projectFiles], parsedVOCs };
+      const project: Project = { ...projectData, id: projectId, files: [...projectData.files, ...projectFiles], parsedVOCs };
       setProjects(prev => [...prev, project]);
       setActiveProject(project);
       toast.success(`项目创建成功，共解析 ${parsedVOCs.length} 条VOC数据`);
+      triggerDimensionSummaries(projectId, parsedVOCs);
     } catch {
-      const project: Project = { ...projectData, id: `proj-${Date.now()}`, parsedVOCs: [] };
+      const project: Project = { ...projectData, id: projectId, parsedVOCs: [] };
       setProjects(prev => [...prev, project]);
       setActiveProject(project);
     } finally {
@@ -976,6 +1047,8 @@ const Home = () => {
         const newVOCs = await parseFilesWithAI(realFiles, fileIds);
         setProjects(prev => prev.map(p => p.id === activeProject.id ? { ...p, parsedVOCs: [...p.parsedVOCs, ...newVOCs] } : p));
         toast.success(`解析完成，共提取 ${newVOCs.length} 条VOC数据`);
+        const allVOCs = [...activeProject.parsedVOCs, ...newVOCs];
+        triggerDimensionSummaries(activeProject.id, allVOCs);
       } finally {
         setIsParsing(false);
       }

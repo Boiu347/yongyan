@@ -29,6 +29,8 @@ interface Project {
   dateRange: string;
   files: any[];
   parsedVOCs: VOCItem[];
+  dimensionSummaries?: any[];
+  overallSummary?: string;
 }
 
 const BRANDS: { name: Brand; color: string; bg: string; border: string }[] = [
@@ -141,6 +143,17 @@ const QualitativeReport = ({ project }: { project: Project }) => {
           ))}
         </div>
       </div>
+
+      {project.overallSummary && (
+        <div className="mb-6 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-100 rounded-2xl p-6">
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles size={16} className="text-purple-500" />
+            <h3 className="text-base font-bold text-gray-900">整体研究发现</h3>
+            <span className="text-[10px] px-2 py-0.5 bg-purple-100 text-purple-600 rounded-full">不分品牌</span>
+          </div>
+          <p className="text-sm text-gray-700 leading-relaxed">{project.overallSummary}</p>
+        </div>
+      )}
 
       {isLoading && (
         <div className="flex flex-col items-center justify-center py-20">
