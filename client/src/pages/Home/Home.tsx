@@ -14,6 +14,7 @@ import {
   Upload,
   Mic,
   Video,
+  Pencil,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
@@ -453,9 +454,9 @@ const AddFileDialog = ({
 };
 
 const Sidebar = ({
-  projects, activeProject, onProjectChange, onCreateProject, onDeleteProject, activeTab, onTabChange
+  projects, activeProject, onProjectChange, onCreateProject, onDeleteProject, onEditProject, activeTab, onTabChange
 }: {
-  projects: Project[]; activeProject: Project; onProjectChange: (p: Project) => void; onCreateProject: () => void; onDeleteProject: (p: Project) => void; activeTab: string; onTabChange: (tab: string) => void;
+  projects: Project[]; activeProject: Project; onProjectChange: (p: Project) => void; onCreateProject: () => void; onDeleteProject: (p: Project) => void; onEditProject: (p: Project) => void; activeTab: string; onTabChange: (tab: string) => void;
 }) => {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
 
@@ -502,9 +503,14 @@ const Sidebar = ({
                         <div className="text-sm line-clamp-1">{proj.name}</div>
                         <div className="text-[10px] opacity-60 mt-0.5">{proj.dateRange}</div>
                       </button>
-                      <button onClick={() => onDeleteProject(proj)} className="opacity-0 group-hover:opacity-100 p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all" title="删除项目">
-                        <Trash2 size={16} />
-                      </button>
+                      <div className="flex gap-1">
+                        <button onClick={() => onEditProject(proj)} className="opacity-0 group-hover:opacity-100 p-2 text-gray-400 hover:text-indigo-500 hover:bg-indigo-50 rounded-lg transition-all" title="编辑项目">
+                          <Pencil size={14} />
+                        </button>
+                        <button onClick={() => onDeleteProject(proj)} className="opacity-0 group-hover:opacity-100 p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all" title="删除项目">
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </motion.div>
@@ -524,10 +530,11 @@ const Sidebar = ({
   );
 };
 
-const InsightsPage = ({ project, onParseFiles, onAddFiles, onDeleteFile }: { project: Project; onParseFiles: () => void; onAddFiles: () => void; onDeleteFile: (fileId: string) => void }) => {
+const InsightsPage = ({ project, onParseFiles, onAddFiles, onDeleteFile, onDeleteVOC, onEditVOC }: { project: Project; onParseFiles: () => void; onAddFiles: () => void; onDeleteFile: (fileId: string) => void; onDeleteVOC: (vocId: string) => void; onEditVOC: (vocId: string, updates: Partial<VOCItem>) => void }) => {
   const [activeDimension, setActiveDimension] = React.useState(0);
   const [expandedSubDimensions, setExpandedSubDimensions] = React.useState<string[]>([]);
   const [selectedBrands, setSelectedBrands] = React.useState<Brand[]>(BRANDS.map(b => b.name));
+  const [editingVOC, setEditingVOC] = React.useState<VOCItem | null>(null);
 
   const toggleSubDimension = (title: string) => {
     setExpandedSubDimensions(prev => prev.includes(title) ? prev.filter(t => t !== title) : [...prev, title]);
@@ -661,11 +668,19 @@ const InsightsPage = ({ project, onParseFiles, onAddFiles, onDeleteFile }: { pro
                               </div>
                               <div className="space-y-4">
                                 {brandVOCs.map(voc => (
-                                  <div key={voc.id} className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:border-indigo-100 transition-all">
-                                    <p className="text-sm text-gray-700 leading-relaxed mb-3">{voc.text}</p>
+                                  <div key={voc.id} className="group/voc bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:border-indigo-100 transition-all relative">
+                                    <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover/voc:opacity-100 transition-opacity">
+                                      <button onClick={() => setEditingVOC(voc)} className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="编辑">
+                                        <Pencil size={12} />
+                                      </button>
+                                      <button onClick={() => onDeleteVOC(voc.id)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="删除">
+                                        <Trash2 size={12} />
+                                      </button>
+                                    </div>
+                                    <p className="text-sm text-gray-700 leading-relaxed mb-3 pr-12">{voc.text}</p>
                                     <div className="flex items-center justify-between">
                                       <div className="flex items-center gap-2">
-                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{voc.respondent}</span>
+                                        <span className="text-[10px] font-bold text-gray-400 tracking-wider">{voc.respondent}</span>
                                         <span className={`text-[10px] px-2 py-0.5 rounded-full ${voc.sentiment === 'positive' ? 'bg-green-50 text-green-600' : voc.sentiment === 'negative' ? 'bg-red-50 text-red-600' : 'bg-gray-100 text-gray-500'}`}>
                                           {voc.sentiment === 'positive' ? '正面' : voc.sentiment === 'negative' ? '负面' : '中性'}
                                         </span>
@@ -691,6 +706,68 @@ const InsightsPage = ({ project, onParseFiles, onAddFiles, onDeleteFile }: { pro
           );
         })}
       </div>
+
+      {editingVOC && (
+        <Dialog open={!!editingVOC} onOpenChange={(open) => { if (!open) setEditingVOC(null); }}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2"><Pencil className="w-5 h-5" />编辑VOC</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>用户原声</Label>
+                <textarea className="w-full min-h-[100px] p-3 border border-gray-200 rounded-lg text-sm resize-y focus:outline-none focus:ring-2 focus:ring-indigo-500" defaultValue={editingVOC.text} id="edit-voc-text" />
+              </div>
+              <div className="space-y-2">
+                <Label>受访者</Label>
+                <Input defaultValue={editingVOC.respondent} id="edit-voc-respondent" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>情感倾向</Label>
+                  <select className="w-full p-2 border border-gray-200 rounded-lg text-sm" defaultValue={editingVOC.sentiment} id="edit-voc-sentiment">
+                    <option value="positive">正面</option>
+                    <option value="neutral">中性</option>
+                    <option value="negative">负面</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label>品牌</Label>
+                  <select className="w-full p-2 border border-gray-200 rounded-lg text-sm" defaultValue={editingVOC.brand} id="edit-voc-brand">
+                    {BRANDS.map(b => <option key={b.name} value={b.name}>{b.name}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>一级维度</Label>
+                  <select className="w-full p-2 border border-gray-200 rounded-lg text-sm" defaultValue={editingVOC.dimension || ''} id="edit-voc-dimension">
+                    {DIMENSIONS.map(d => <option key={d.name} value={d.name}>{d.name}</option>)}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label>二级维度</Label>
+                  <Input defaultValue={editingVOC.subDimension || ''} id="edit-voc-subdimension" />
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setEditingVOC(null)}>取消</Button>
+              <Button className="bg-indigo-600 hover:bg-indigo-700" onClick={() => {
+                const text = (document.getElementById('edit-voc-text') as HTMLTextAreaElement)?.value || '';
+                const respondent = (document.getElementById('edit-voc-respondent') as HTMLInputElement)?.value || '';
+                const sentiment = (document.getElementById('edit-voc-sentiment') as HTMLSelectElement)?.value as 'positive' | 'neutral' | 'negative';
+                const brand = (document.getElementById('edit-voc-brand') as HTMLSelectElement)?.value as Brand;
+                const dimension = (document.getElementById('edit-voc-dimension') as HTMLSelectElement)?.value || '';
+                const subDimension = (document.getElementById('edit-voc-subdimension') as HTMLInputElement)?.value || '';
+                onEditVOC(editingVOC.id, { text, respondent, sentiment, brand, dimension, subDimension });
+                setEditingVOC(null);
+                toast.success('VOC已更新');
+              }}>保存</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };
@@ -715,6 +792,8 @@ const Home = () => {
   const [projectToDelete, setProjectToDelete] = React.useState<Project | null>(null);
   const [isParsing, setIsParsing] = React.useState(false);
   const [isAddFileDialogOpen, setIsAddFileDialogOpen] = React.useState(false);
+  const [isEditProjectDialogOpen, setIsEditProjectDialogOpen] = React.useState(false);
+  const [projectToEdit, setProjectToEdit] = React.useState<Project | null>(null);
   const [activeTab, setActiveTab] = React.useState('qualitative-insights');
   const [parseProgress, setParseProgress] = React.useState<{
     current: number;
@@ -775,6 +854,25 @@ const Home = () => {
     toast.success('项目已删除');
     setIsDeleteDialogOpen(false);
     setProjectToDelete(null);
+  };
+
+  const handleEditProject = (project: Project) => { setProjectToEdit(project); setIsEditProjectDialogOpen(true); };
+
+  const handleSaveProjectEdit = (name: string, dateRange: string) => {
+    if (!projectToEdit) return;
+    setProjects(prev => prev.map(p => p.id === projectToEdit.id ? { ...p, name, dateRange } : p));
+    toast.success('项目信息已更新');
+    setIsEditProjectDialogOpen(false);
+    setProjectToEdit(null);
+  };
+
+  const handleDeleteVOC = (vocId: string) => {
+    setProjects(prev => prev.map(p => p.id === activeProject.id ? { ...p, parsedVOCs: p.parsedVOCs.filter(v => v.id !== vocId) } : p));
+    toast.success('VOC已删除');
+  };
+
+  const handleEditVOC = (vocId: string, updates: Partial<VOCItem>) => {
+    setProjects(prev => prev.map(p => p.id === activeProject.id ? { ...p, parsedVOCs: p.parsedVOCs.map(v => v.id === vocId ? { ...v, ...updates } : v) } : p));
   };
 
   const parseFilesWithAI = async (filesToParse: File[], fileIds: string[]): Promise<VOCItem[]> => {
@@ -901,7 +999,7 @@ const Home = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans text-gray-900 flex">
-      <Sidebar projects={projects} activeProject={activeProject} onProjectChange={setActiveProject} onCreateProject={() => setIsCreateDialogOpen(true)} onDeleteProject={handleDeleteProject} activeTab={activeTab} onTabChange={setActiveTab} />
+      <Sidebar projects={projects} activeProject={activeProject} onProjectChange={setActiveProject} onCreateProject={() => setIsCreateDialogOpen(true)} onDeleteProject={handleDeleteProject} onEditProject={handleEditProject} activeTab={activeTab} onTabChange={setActiveTab} />
       <main className="flex-1 ml-64 overflow-y-auto h-screen bg-gray-50/50">
         {parseProgress && (() => {
           const basePct = ((parseProgress.current - 1) / parseProgress.total) * 100;
@@ -937,7 +1035,7 @@ const Home = () => {
           <AnimatePresence mode="wait">
             <motion.div key={`${activeProject.id}-${activeTab}`} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.3 }}>
               {activeTab === 'qualitative-insights' && (
-                <InsightsPage project={activeProject} onParseFiles={handleParseFiles} onAddFiles={() => setIsAddFileDialogOpen(true)} onDeleteFile={handleDeleteFile} />
+                <InsightsPage project={activeProject} onParseFiles={handleParseFiles} onAddFiles={() => setIsAddFileDialogOpen(true)} onDeleteFile={handleDeleteFile} onDeleteVOC={handleDeleteVOC} onEditVOC={handleEditVOC} />
               )}
               {activeTab === 'qualitative-report' && (
                 <QualitativeReport project={activeProject} />
@@ -955,6 +1053,35 @@ const Home = () => {
       <CreateProjectDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} onCreate={handleCreateProject} isParsing={isParsing} onParseAndCreate={handleParseAndCreate} />
       <DeleteConfirmDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen} onConfirm={confirmDeleteProject} projectName={projectToDelete?.name || ''} />
       <AddFileDialog open={isAddFileDialogOpen} onOpenChange={setIsAddFileDialogOpen} projectName={activeProject.name} onAddFiles={handleAddFilesToProject} isParsing={isParsing} />
+
+      {projectToEdit && (
+        <Dialog open={isEditProjectDialogOpen} onOpenChange={setIsEditProjectDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2"><Pencil className="w-5 h-5" />编辑项目</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>项目名称</Label>
+                <Input defaultValue={projectToEdit.name} id="edit-project-name" />
+              </div>
+              <div className="space-y-2">
+                <Label>研究周期</Label>
+                <Input defaultValue={projectToEdit.dateRange} id="edit-project-daterange" />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsEditProjectDialogOpen(false)}>取消</Button>
+              <Button className="bg-indigo-600 hover:bg-indigo-700" onClick={() => {
+                const name = (document.getElementById('edit-project-name') as HTMLInputElement)?.value || '';
+                const dateRange = (document.getElementById('edit-project-daterange') as HTMLInputElement)?.value || '';
+                if (!name.trim()) { toast.error('项目名称不能为空'); return; }
+                handleSaveProjectEdit(name.trim(), dateRange.trim());
+              }}>保存</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };

@@ -221,13 +221,17 @@ export class AiService {
     const chunks: string[] = [];
     const lines = text.split('\n');
     let current = '';
+    let lastContext = '';
 
     for (const line of lines) {
+      // Track user/heading context
+      if (/^#{1,4} /.test(line) || /^用户\d|^\*\*用户\d/.test(line)) {
+        lastContext = line;
+      }
+
       if (current.length + line.length + 1 > maxChars && current.length > 0) {
         chunks.push(current);
-        // Keep the current heading context for the next chunk
-        const lastHeading = current.match(/(?:^|\n)(#{1,4} .+)(?:\n|$)/g);
-        current = lastHeading ? lastHeading[lastHeading.length - 1].trim() + '\n' : '';
+        current = lastContext ? lastContext + '\n' : '';
       }
       current += (current ? '\n' : '') + line;
     }
