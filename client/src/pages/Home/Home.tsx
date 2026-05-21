@@ -570,7 +570,7 @@ const Sidebar = ({
   );
 };
 
-const InsightsPage = ({ project, onParseFiles, onAddFiles, onDeleteFile, onDeleteVOC, onEditVOC }: { project: Project; onParseFiles: () => void; onAddFiles: () => void; onDeleteFile: (fileId: string) => void; onDeleteVOC: (vocId: string) => void; onEditVOC: (vocId: string, updates: Partial<VOCItem>) => void }) => {
+const InsightsPage = ({ project, onParseFiles, onAddFiles, onDeleteFile, onDeleteVOC, onEditVOC, onGenerateSummaries }: { project: Project; onParseFiles: () => void; onAddFiles: () => void; onDeleteFile: (fileId: string) => void; onDeleteVOC: (vocId: string) => void; onEditVOC: (vocId: string, updates: Partial<VOCItem>) => void; onGenerateSummaries?: () => void }) => {
   const [activeDimension, setActiveDimension] = React.useState(0);
   const [expandedSubDimensions, setExpandedSubDimensions] = React.useState<string[]>([]);
   const [subDimBrandFilters, setSubDimBrandFilters] = React.useState<Record<string, Brand[]>>({});
@@ -653,17 +653,32 @@ const InsightsPage = ({ project, onParseFiles, onAddFiles, onDeleteFile, onDelet
         )}
       </div>
 
-      <div className="mb-8 flex justify-between items-end">
-        <div>
-          <h3 className="text-xl font-bold text-gray-900">定性洞察</h3>
-          <p className="text-gray-500 mt-1">基于用户原声的深度分析</p>
+      <div className="mb-8">
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <h3 className="text-xl font-bold text-gray-900">定性洞察</h3>
+            <p className="text-gray-500 mt-1">基于用户原声的深度分析</p>
+          </div>
+          {!project.dimensionSummaries?.length && project.parsedVOCs.length > 0 && (
+            <Button variant="outline" size="sm" onClick={() => onGenerateSummaries?.()}>
+              <Sparkles size={14} className="mr-1.5" />生成维度总结
+            </Button>
+          )}
         </div>
-        <div className="flex bg-gray-100 p-1 rounded-xl">
-          {DIMENSIONS.map((dim, index) => (
-            <button key={dim.id} onClick={() => setActiveDimension(index)} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeDimension === index ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
-              {dim.name}
-            </button>
-          ))}
+        <div className="grid grid-cols-3 gap-3">
+          {DIMENSIONS.map((dim, index) => {
+            const isActive = activeDimension === index;
+            const dimVocCount = project.parsedVOCs.filter(v => v.dimension === dim.name).length;
+            return (
+              <button key={dim.id} onClick={() => setActiveDimension(index)} className={`p-4 rounded-2xl text-left transition-all border-2 ${isActive ? 'bg-indigo-50 border-indigo-300 shadow-sm' : 'bg-white border-gray-100 hover:border-gray-200 hover:bg-gray-50'}`}>
+                <div className="flex items-center justify-between mb-1">
+                  <span className={`text-sm font-bold ${isActive ? 'text-indigo-700' : 'text-gray-700'}`}>{dim.name}</span>
+                  <span className={`text-xs px-2 py-0.5 rounded-full ${isActive ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-100 text-gray-500'}`}>{dimVocCount}</span>
+                </div>
+                <p className="text-xs text-gray-400">{dim.subDimensions.map(s => s.title.split('：')[0].split('？')[0]).join(' · ')}</p>
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -1151,7 +1166,7 @@ const Home = () => {
           <AnimatePresence mode="wait">
             <motion.div key={`${activeProject.id}-${activeTab}`} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.3 }}>
               {activeTab === 'qualitative-insights' && (
-                <InsightsPage project={activeProject} onParseFiles={handleParseFiles} onAddFiles={() => setIsAddFileDialogOpen(true)} onDeleteFile={handleDeleteFile} onDeleteVOC={handleDeleteVOC} onEditVOC={handleEditVOC} />
+                <InsightsPage project={activeProject} onParseFiles={handleParseFiles} onAddFiles={() => setIsAddFileDialogOpen(true)} onDeleteFile={handleDeleteFile} onDeleteVOC={handleDeleteVOC} onEditVOC={handleEditVOC} onGenerateSummaries={() => triggerDimensionSummaries(activeProject.id, activeProject.parsedVOCs)} />
               )}
               {activeTab === 'qualitative-report' && (
                 <QualitativeReport project={activeProject} />
