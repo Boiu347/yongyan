@@ -455,4 +455,59 @@ export class AiController {
       }
     }
   }
+
+  @Post('parse-feishu-link')
+  async parseFeishuLink(
+    @Res() res: Response,
+    @Body() body: { url: string },
+  ) {
+    if (!body.url || typeof body.url !== 'string') {
+      throw new BadRequestException('Request body must contain a "url" string');
+    }
+
+    this.logger.log(`Parse Feishu link request: ${body.url}`);
+
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('X-Accel-Buffering', 'no');
+
+    const keepAlive = setInterval(() => {
+      if (!res.writableEnded) res.write(' ');
+    }, 10_000);
+
+    try {
+      let text = '';
+      const url = body.url.trim();
+
+      if (url.includes('/minutes/')) {
+        const minuteToken = url.split('/minutes/').pop()?.split('?')[0] || '';
+        if (!minuteToken) throw new BadRequestException('无效的飞书妙记链接');
+        text = await this.aiService.fetchFeishuMinutesContent(minuteToken);
+      } else if (url.includes('/wiki/')) {
+        const wikiToken = url.split('/wiki/').pop()?.split('?')[0] || '';
+        if (!wikiToken) throw new BadRequestException('无效的飞书知识库链接');
+        text = await this.aiService.fetchFeishuDocContent(wikiToken, 'wiki');
+      } else if (url.includes('/docx/')) {
+        const docToken = url.split('/docx/').pop()?.split('?')[0] || '';
+        if (!docToken) throw new BadRequestException('无效的飞书文档链接');
+        text = await this.aiService.fetchFeishuDocContent(docToken, 'docx');
+      } else {
+        throw new BadRequestException('不支持的链接格式，请提供飞书文档、知识库或妙记链接');
+      }
+
+      if (!text || text.trim().length === 0) {
+        throw new BadRequestException('文档内容为空');
+      }
+
+      this.logger.log(`Feishu content fetched: ${text.length} chars`);
+      const vocList = await this.aiService.extractVOCs(text);
+      clearInterval(keepAlive);
+      res.end(JSON.stringify({ text, vocList }));
+    } catch (err: any) {
+      clearInterval(keepAlive);
+      if (!res.writableEnded) {
+        const msg = err?.response?.message || err?.message || '解析飞书链接失败';
+        res.end(JSON.stringify({ error: { message: msg }, text: '', vocList: [] }));
+      }
+    }
+  }
 }

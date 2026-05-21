@@ -37,6 +37,7 @@ interface VOCItem {
   sentiment: 'positive' | 'neutral' | 'negative';
   dimension?: string;
   subDimension?: string;
+  tag?: string;
   sourceFileId?: string;
 }
 
@@ -124,6 +125,21 @@ async function apiExtractVocs(text: string, signal?: AbortSignal): Promise<{ voc
   const data = JSON.parse(raw.trim());
   if (data.error) {
     throw new Error(data.error);
+  }
+  return data;
+}
+
+async function apiParseFeishuLink(url: string, signal?: AbortSignal): Promise<{ text: string; vocList: VOCItem[] }> {
+  const res = await fetch('/api/ai/parse-feishu-link', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url }),
+    signal,
+  });
+  const raw = await res.text();
+  const data = JSON.parse(raw.trim());
+  if (data.error?.message) {
+    throw new Error(data.error.message);
   }
   return data;
 }
@@ -684,23 +700,6 @@ const InsightsPage = ({ project, onParseFiles, onAddFiles, onDeleteFile, onDelet
                         </div>
                       )}
 
-                      {dimSummary?.brandSummaries && Object.keys(dimSummary.brandSummaries).length > 0 && (
-                        <div className="mb-5 grid grid-cols-2 gap-3">
-                          {Object.entries(dimSummary.brandSummaries).map(([brand, summary]) => {
-                            const brandInfo = BRANDS.find(b => b.name === brand);
-                            return (
-                              <div key={brand} className="p-3 rounded-lg border border-gray-100" style={{ backgroundColor: brandInfo?.bg || '#f9fafb' }}>
-                                <div className="flex items-center gap-2 mb-1">
-                                  <div className="w-1.5 h-4 rounded-full" style={{ backgroundColor: brandInfo?.color || '#6b7280' }} />
-                                  <span className="text-xs font-bold text-gray-700">{brand}</span>
-                                </div>
-                                <p className="text-xs text-gray-600 leading-relaxed">{summary}</p>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-
                       <div className="mb-4 flex items-center gap-3 flex-wrap">
                         <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">筛选品牌</span>
                         {BRANDS.map(brand => (
@@ -734,12 +733,13 @@ const InsightsPage = ({ project, onParseFiles, onAddFiles, onDeleteFile, onDelet
                                       </button>
                                     </div>
                                     <p className="text-sm text-gray-700 leading-relaxed mb-3 pr-12">{voc.text}</p>
-                                    <div className="flex items-center justify-between">
-                                      <div className="flex items-center gap-2">
+                                    <div className="flex items-center justify-between flex-wrap gap-1">
+                                      <div className="flex items-center gap-2 flex-wrap">
                                         <span className="text-[10px] font-bold text-gray-400 tracking-wider">{voc.respondent}</span>
                                         <span className={`text-[10px] px-2 py-0.5 rounded-full ${voc.sentiment === 'positive' ? 'bg-green-50 text-green-600' : voc.sentiment === 'negative' ? 'bg-red-50 text-red-600' : 'bg-gray-100 text-gray-500'}`}>
                                           {voc.sentiment === 'positive' ? '正面' : voc.sentiment === 'negative' ? '负面' : '中性'}
                                         </span>
+                                        {voc.tag && <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">{voc.tag}</span>}
                                       </div>
                                     </div>
                                   </div>
@@ -747,6 +747,15 @@ const InsightsPage = ({ project, onParseFiles, onAddFiles, onDeleteFile, onDelet
                                 {brandVOCs.length === 0 && (
                                   <div className="py-8 flex flex-col items-center justify-center text-gray-300 border-2 border-dashed border-gray-100 rounded-xl">
                                     <MessageSquareQuote size={24} className="mb-2" /><span className="text-xs">暂无数据</span>
+                                  </div>
+                                )}
+                                {dimSummary?.brandSummaries?.[brand.name] && (
+                                  <div className="mt-4 p-3 rounded-lg border border-dashed border-indigo-200 bg-indigo-50/30">
+                                    <div className="flex items-center gap-1.5 mb-1.5">
+                                      <Sparkles size={10} className="text-indigo-400" />
+                                      <span className="text-[10px] font-bold text-indigo-500 uppercase">品牌小结</span>
+                                    </div>
+                                    <p className="text-xs text-gray-600 leading-relaxed">{dimSummary.brandSummaries[brand.name]}</p>
                                   </div>
                                 )}
                               </div>
@@ -1041,17 +1050,46 @@ const Home = () => {
     setProjects(prev => prev.map(p => p.id === activeProject.id ? { ...p, files: [...p.files, ...newProjectFiles] } : p));
     toast.success(`已添加 ${newProjectFiles.length} 个文件`);
 
+    const allNewVOCs: VOCItem[] = [];
+
     if (parseImmediately && realFiles.length > 0) {
       setIsParsing(true);
       try {
         const newVOCs = await parseFilesWithAI(realFiles, fileIds);
+        allNewVOCs.push(...newVOCs);
         setProjects(prev => prev.map(p => p.id === activeProject.id ? { ...p, parsedVOCs: [...p.parsedVOCs, ...newVOCs] } : p));
-        toast.success(`解析完成，共提取 ${newVOCs.length} 条VOC数据`);
-        const allVOCs = [...activeProject.parsedVOCs, ...newVOCs];
-        triggerDimensionSummaries(activeProject.id, allVOCs);
+        toast.success(`文件解析完成，共提取 ${newVOCs.length} 条VOC数据`);
       } finally {
         setIsParsing(false);
       }
+    }
+
+    if (parseImmediately && links.length > 0) {
+      setIsParsing(true);
+      try {
+        for (const link of links) {
+          if (!link.link) continue;
+          const isFeishuLink = link.link.includes('feishu.cn/minutes/') || link.link.includes('feishu.cn/docx/') || link.link.includes('feishu.cn/wiki/');
+          if (!isFeishuLink) continue;
+          toast.info(`正在解析飞书链接: ${link.name || link.link.slice(0, 30)}...`);
+          try {
+            const result = await apiParseFeishuLink(link.link);
+            const taggedVOCs = result.vocList.map(v => ({ ...v, sourceFileId: `link-${ts}-${links.indexOf(link)}` }));
+            allNewVOCs.push(...taggedVOCs);
+            setProjects(prev => prev.map(p => p.id === activeProject.id ? { ...p, parsedVOCs: [...p.parsedVOCs, ...taggedVOCs] } : p));
+            toast.success(`"${link.name}" 解析完成，提取 ${taggedVOCs.length} 条VOC`);
+          } catch (err) {
+            toast.error(`"${link.name}" 解析失败: ${err instanceof Error ? err.message : '未知错误'}`);
+          }
+        }
+      } finally {
+        setIsParsing(false);
+      }
+    }
+
+    if (allNewVOCs.length > 0) {
+      const allVOCs = [...activeProject.parsedVOCs, ...allNewVOCs];
+      triggerDimensionSummaries(activeProject.id, allVOCs);
     }
   };
 
