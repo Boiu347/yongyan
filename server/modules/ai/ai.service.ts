@@ -510,23 +510,32 @@ ${chunkText}`;
   ): Promise<{ summaries: Array<{ dimension: string; subDimension: string; summary: string; brandSummaries: Record<string, string> }>; overallSummary: string }> {
     this.logger.log(`Generating dimension summaries from ${vocItems.length} VOC items`);
 
-    const prompt = `你是一位用户研究专家。请根据以下VOC数据，生成两部分内容：
+    const prompt = `你是一位用户研究专家。请根据以下VOC数据，为【每一个】二级维度生成总结。
 
-1. **各维度总结**：按"一级维度-二级维度"分组，为每个有数据的二级维度生成：
-   - summary：该维度下所有品牌的整体发现（2-3句话概括核心洞察）
-   - brandSummaries：该维度下每个出现过的品牌的单独总结（1-2句话）
+## 必须覆盖的所有二级维度（共9个，每个都要输出，即使数据较少也要写）：
+1. dimension="需求认知", subDimension="诉求是什么？"
+2. dimension="需求认知", subDimension="对启蒙的要求&态度"
+3. dimension="需求认知", subDimension="启蒙有效的标准&预期"
+4. dimension="购买决策", subDimension="触达渠道"
+5. dimension="购买决策", subDimension="吸引卖点"
+6. dimension="购买决策", subDimension="购前预期"
+7. dimension="产品体验", subDimension="使用场景"
+8. dimension="产品体验", subDimension="优势好评"
+9. dimension="产品体验", subDimension="劣势差评"
 
-2. **全局总结**：不分品牌，从整体研究角度总结核心发现（3-5句话）
+## 每个维度生成：
+- summary：该维度的整体发现（2-3句话概括核心洞察）。如果该维度数据不足，写"该维度数据较少，暂无充分洞察"
+- brandSummaries：该维度下每个出现过的品牌的单独总结（1-2句话）。品牌没有相关数据则不用写
 
-输出格式为JSON：
+## 另外生成：
+- overallSummary：不分品牌、不分维度，从整体研究角度总结核心发现（3-5句话）
+
+输出格式为JSON（必须包含9个summaries条目）：
 {
   "summaries": [
-    {
-      "dimension": "需求认知",
-      "subDimension": "诉求是什么？",
-      "summary": "整体总结...",
-      "brandSummaries": { "洋葱": "...", "学而思": "..." }
-    }
+    { "dimension": "需求认知", "subDimension": "诉求是什么？", "summary": "...", "brandSummaries": {"洋葱": "...", "学而思": "..."} },
+    { "dimension": "需求认知", "subDimension": "对启蒙的要求&态度", "summary": "...", "brandSummaries": {...} },
+    ...共9条
   ],
   "overallSummary": "全局总结..."
 }

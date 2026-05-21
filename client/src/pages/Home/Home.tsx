@@ -673,7 +673,12 @@ const InsightsPage = ({ project, onParseFiles, onAddFiles, onDeleteFile, onDelet
           const allVocsForSubDim = getVOCsForSubDimension(subDim.title);
           const vocs = allVocsForSubDim.filter(v => selectedBrands.includes(v.brand));
           const isExpanded = expandedSubDimensions.includes(subDim.title);
-          const dimSummary = project.dimensionSummaries?.find(s => s.dimension === currentDimension.name && s.subDimension === subDim.title);
+          const dimSummary = project.dimensionSummaries?.find(s => {
+            if (s.dimension !== currentDimension.name) return false;
+            const a = s.subDimension?.toLowerCase() || '';
+            const b = subDim.title.toLowerCase();
+            return a === b || a.includes(b) || b.includes(a) || a.replace(/[：:？?]/g, '').includes(b.replace(/[：:？?]/g, ''));
+          });
 
           return (
             <div key={subDim.title} className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
