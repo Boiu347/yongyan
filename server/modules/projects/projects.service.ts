@@ -65,18 +65,29 @@ export class ProjectsService {
       this.logger.warn(`Failed to load from disk: ${err}`);
     }
 
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const seedData = require('../../seed-data/projects.seed.json');
-      if (Array.isArray(seedData) && seedData.length > 0) {
-        this.projects = seedData;
-        this.saveToDisk();
-        this.logger.log(`Loaded ${this.projects.length} projects from bundled seed data`);
-        return;
+    const seedPaths = [
+      join(__dirname, '..', '..', 'seed-data', 'projects.seed.json'),
+      join(__dirname, '..', 'seed-data', 'projects.seed.json'),
+      join(process.cwd(), 'dist', 'server', 'seed-data', 'projects.seed.json'),
+      join(process.cwd(), 'server', 'seed-data', 'projects.seed.json'),
+    ];
+    for (const seedPath of seedPaths) {
+      try {
+        if (existsSync(seedPath)) {
+          const raw = readFileSync(seedPath, 'utf-8');
+          const seedData = JSON.parse(raw);
+          if (Array.isArray(seedData) && seedData.length > 0 && seedData[0]?.parsedVOCs?.length > 3) {
+            this.projects = seedData;
+            this.saveToDisk();
+            this.logger.log(`Loaded ${this.projects.length} projects from seed: ${seedPath}`);
+            return;
+          }
+        }
+      } catch (err) {
+        this.logger.warn(`Seed path ${seedPath}: ${err}`);
       }
-    } catch (err) {
-      this.logger.warn(`Failed to load seed data: ${err}`);
     }
+    this.logger.warn(`No seed data found. Tried: ${seedPaths.join(', ')}. __dirname=${__dirname}, cwd=${process.cwd()}`);
 
     this.projects = [];
   }

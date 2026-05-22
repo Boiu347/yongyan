@@ -188,7 +188,7 @@
     "dev": "concurrently -n \"server,client\" -c \"blue,green\" \"npm run dev:server\" \"npm run dev:client\"",
     "dev:client": "vite --config vite.config.ts",
     "dev:server": "nest start --watch",
-    "start": "node dist/server/main.js",
+    "start": "node -e \"const fs=require('fs'),p=require('path');const d=p.join(process.cwd(),'data');const f=p.join(d,'projects.json');const s=p.join(process.cwd(),'dist','server','seed-data','projects.seed.json');if(!fs.existsSync(f)||JSON.parse(fs.readFileSync(f,'utf-8'))[0]?.parsedVOCs?.length<4){fs.mkdirSync(d,{recursive:true});if(fs.existsSync(s)){fs.copyFileSync(s,f);console.log('Seed data restored')}}\" && node dist/server/main.js",
     "format": "prettier --write \"{server,client,test}/**/*.{js,ts,tsx,json,md}\"",
     "test": "jest"
   },
