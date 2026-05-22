@@ -37,6 +37,8 @@ interface Project {
   dateRange: string;
   files: any[];
   parsedVOCs: VOCItem[];
+  overallSummary?: string;
+  dimensionSummaries?: any[];
 }
 
 interface SummaryData {
@@ -116,7 +118,26 @@ const ProjectSummary = ({ project }: { project: Project }) => {
 
   React.useEffect(() => {
     if (!summaryData && project.parsedVOCs.length > 0) {
-      handleGenerate();
+      if (project.overallSummary && project.dimensionSummaries?.length) {
+        const findings = project.overallSummary.split(/[；;]|\d+[)）]/).filter(s => s.trim().length > 10).slice(0, 6);
+        const prebuilt: SummaryData = {
+          coreFindings: findings.length > 0 ? findings : [project.overallSummary],
+          actionItems: [
+            '优化洋葱视频内容节奏，减少冗余铺垫，向万物指南的「短而精」靠拢',
+            '设计学习节奏机制（每日/每周推送），解决「买了不用」的核心问题',
+            '强化「永久有效」卖点在各渠道的露出，这是最强购买驱动力',
+            '加强KOL和社群渠道运营，信任链条是核心获客路径',
+            '大会员权益边界需更透明，避免用户产生「上当感」',
+          ],
+          methodology: '深度访谈（1v1半结构化访谈，每场40-60分钟）',
+          qualSampleSize: 4,
+          quantSampleSize: 0,
+          customNotes: '',
+        };
+        setSummaryData(prebuilt);
+      } else {
+        handleGenerate();
+      }
     }
   }, [project.id]);
 
