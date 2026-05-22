@@ -51,28 +51,10 @@ export class ProjectsService {
 
   private loadFromDisk() {
     try {
-      const seedPaths = [
-        join(process.cwd(), 'server', 'seed-data', 'projects.seed.json'),
-        join(process.cwd(), 'dist', 'server', 'seed-data', 'projects.seed.json'),
-        join(__dirname, '..', '..', 'seed-data', 'projects.seed.json'),
-      ];
-
       if (existsSync(this.dataFile)) {
         const raw = readFileSync(this.dataFile, 'utf-8');
         this.projects = JSON.parse(raw);
         this.logger.log(`Loaded ${this.projects.length} projects from disk`);
-      }
-
-      for (const seedFile of seedPaths) {
-        if (existsSync(seedFile)) {
-          this.logger.log(`Found seed file at: ${seedFile}`);
-          const seedRaw = readFileSync(seedFile, 'utf-8');
-          const seedProjects: Project[] = JSON.parse(seedRaw);
-          this.projects = seedProjects;
-          this.saveToDisk();
-          this.logger.log(`Loaded ${seedProjects.length} projects from seed data (overwrite)`);
-          break;
-        }
       }
     } catch (err) {
       this.logger.warn(`Failed to load projects from disk: ${err}`);
