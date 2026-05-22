@@ -69,7 +69,8 @@
         "dimension": "需求认知",
         "subDimension": "诉求是什么？",
         "tag": "兴趣启蒙",
-        "sourceFileId": "f1"
+        "sourceFileId": "f1",
+        "audioClip": "/audio/v003.mp3"
       },
       {
         "id": "v004",
@@ -80,7 +81,8 @@
         "dimension": "需求认知",
         "subDimension": "诉求是什么？",
         "tag": "兴趣启蒙",
-        "sourceFileId": "f1"
+        "sourceFileId": "f1",
+        "audioClip": "/audio/v004.mp3"
       },
       {
         "id": "v005",
@@ -103,7 +105,8 @@
         "dimension": "需求认知",
         "subDimension": "诉求是什么？",
         "tag": "衔接先修",
-        "sourceFileId": "f2"
+        "sourceFileId": "f2",
+        "audioClip": "/audio/v006.mp3"
       },
       {
         "id": "v007",
@@ -162,7 +165,8 @@
         "dimension": "需求认知",
         "subDimension": "对「启蒙」的要求&态度",
         "tag": "学科启蒙态度",
-        "sourceFileId": "f1"
+        "sourceFileId": "f1",
+        "audioClip": "/audio/v011.mp3"
       },
       {
         "id": "v012",
@@ -173,7 +177,8 @@
         "dimension": "需求认知",
         "subDimension": "对「启蒙」的要求&态度",
         "tag": "学科启蒙态度",
-        "sourceFileId": "f1"
+        "sourceFileId": "f1",
+        "audioClip": "/audio/v012.mp3"
       },
       {
         "id": "v013",
@@ -184,7 +189,8 @@
         "dimension": "需求认知",
         "subDimension": "对「启蒙」的要求&态度",
         "tag": "学科启蒙态度",
-        "sourceFileId": "f2"
+        "sourceFileId": "f2",
+        "audioClip": "/audio/v013.mp3"
       },
       {
         "id": "v014",
@@ -219,7 +225,8 @@
         "dimension": "需求认知",
         "subDimension": "「启蒙有效」的标准&预期",
         "tag": "坚持学习频率",
-        "sourceFileId": "f3"
+        "sourceFileId": "f3",
+        "audioClip": "/audio/v016.mp3"
       },
       {
         "id": "v017",
@@ -254,7 +261,8 @@
         "dimension": "购买决策",
         "subDimension": "触达渠道：在哪看到的？",
         "tag": "小红书+学习群",
-        "sourceFileId": "f1"
+        "sourceFileId": "f1",
+        "audioClip": "/audio/v019.mp3"
       },
       {
         "id": "v020",
@@ -277,7 +285,8 @@
         "dimension": "购买决策",
         "subDimension": "触达渠道：在哪看到的？",
         "tag": "学习群+朋友推荐",
-        "sourceFileId": "f1"
+        "sourceFileId": "f1",
+        "audioClip": "/audio/v021.mp3"
       },
       {
         "id": "v022",
@@ -324,7 +333,8 @@
         "dimension": "购买决策",
         "subDimension": "吸引卖点：什么内容吸引促使购买？",
         "tag": "永久有效",
-        "sourceFileId": "f1"
+        "sourceFileId": "f1",
+        "audioClip": "/audio/v025.mp3"
       },
       {
         "id": "v026",
@@ -371,7 +381,8 @@
         "dimension": "购买决策",
         "subDimension": "吸引卖点：什么内容吸引促使购买？",
         "tag": "永久有效",
-        "sourceFileId": "f1"
+        "sourceFileId": "f1",
+        "audioClip": "/audio/v029.mp3"
       },
       {
         "id": "v030",
@@ -382,7 +393,8 @@
         "dimension": "购买决策",
         "subDimension": "吸引卖点：什么内容吸引促使购买？",
         "tag": "永久有效",
-        "sourceFileId": "f3"
+        "sourceFileId": "f3",
+        "audioClip": "/audio/v030.mp3"
       },
       {
         "id": "v031",
@@ -417,7 +429,8 @@
         "dimension": "购买决策",
         "subDimension": "购前预期：买前希望孩子怎么学？",
         "tag": "提前认知",
-        "sourceFileId": "f1"
+        "sourceFileId": "f1",
+        "audioClip": "/audio/v033.mp3"
       },
       {
         "id": "v034",
@@ -428,7 +441,8 @@
         "dimension": "购买决策",
         "subDimension": "购前预期：买前希望孩子怎么学？",
         "tag": "先买着再说",
-        "sourceFileId": "f3"
+        "sourceFileId": "f3",
+        "audioClip": "/audio/v034.mp3"
       },
       {
         "id": "v035",
@@ -463,7 +477,8 @@
         "dimension": "产品体验",
         "subDimension": "使用场景：什么时候学？",
         "tag": "碎片时间",
-        "sourceFileId": "f3"
+        "sourceFileId": "f3",
+        "audioClip": "/audio/v037.mp3"
       },
       {
         "id": "v038",
@@ -474,7 +489,8 @@
         "dimension": "产品体验",
         "subDimension": "使用场景：什么时候学？",
         "tag": "周末",
-        "sourceFileId": "f1"
+        "sourceFileId": "f1",
+        "audioClip": "/audio/v038.mp3"
       },
       {
         "id": "v039",
@@ -497,7 +513,8 @@
         "dimension": "产品体验",
         "subDimension": "优势/好评",
         "tag": "内容质量高",
-        "sourceFileId": "f1"
+        "sourceFileId": "f1",
+        "audioClip": "/audio/v040.mp3"
       },
       {
         "id": "v041",
@@ -520,7 +537,8 @@
         "dimension": "产品体验",
         "subDimension": "优势/好评",
         "tag": "有体系",
-        "sourceFileId": "f1"
+        "sourceFileId": "f1",
+        "audioClip": "/audio/v042.mp3"
       },
       {
         "id": "v043",
@@ -567,7 +585,8 @@
         "dimension": "产品体验",
         "subDimension": "优势/好评",
         "tag": "孩子喜欢",
-        "sourceFileId": "f1"
+        "sourceFileId": "f1",
+        "audioClip": "/audio/v046.mp3"
       },
       {
         "id": "v047",
@@ -686,7 +705,8 @@
         "dimension": "产品体验",
         "subDimension": "劣势/差评",
         "tag": "性价比低",
-        "sourceFileId": "f2"
+        "sourceFileId": "f2",
+        "audioClip": "/audio/v056.mp3"
       },
       {
         "id": "v057",
@@ -709,7 +729,8 @@
         "dimension": "需求认知",
         "subDimension": "诉求是什么？",
         "tag": "兴趣启蒙",
-        "sourceFileId": "f5"
+        "sourceFileId": "f5",
+        "audioClip": "/audio/v058.mp3"
       },
       {
         "id": "v059",
@@ -732,7 +753,8 @@
         "dimension": "需求认知",
         "subDimension": "对「启蒙」的要求&态度",
         "tag": "兴趣启蒙态度",
-        "sourceFileId": "f5"
+        "sourceFileId": "f5",
+        "audioClip": "/audio/v060.mp3"
       },
       {
         "id": "v061",
@@ -791,7 +813,8 @@
         "dimension": "购买决策",
         "subDimension": "触达渠道：在哪看到的？",
         "tag": "抖音直播间",
-        "sourceFileId": "f5"
+        "sourceFileId": "f5",
+        "audioClip": "/audio/v065.mp3"
       },
       {
         "id": "v066",
@@ -826,7 +849,8 @@
         "dimension": "购买决策",
         "subDimension": "吸引卖点：什么内容吸引促使购买？",
         "tag": "权威+独家化学",
-        "sourceFileId": "f5"
+        "sourceFileId": "f5",
+        "audioClip": "/audio/v068.mp3"
       },
       {
         "id": "v069",
@@ -884,7 +908,8 @@
         "dimension": "产品体验",
         "subDimension": "使用场景：什么时候学？",
         "tag": "碎片时间",
-        "sourceFileId": "f5"
+        "sourceFileId": "f5",
+        "audioClip": "/audio/v073.mp3"
       },
       {
         "id": "v074",
@@ -895,7 +920,8 @@
         "dimension": "产品体验",
         "subDimension": "使用场景：什么时候学？",
         "tag": "作业间隙",
-        "sourceFileId": "f6"
+        "sourceFileId": "f6",
+        "audioClip": "/audio/v074.mp3"
       },
       {
         "id": "v075",
@@ -966,7 +992,8 @@
         "dimension": "产品体验",
         "subDimension": "劣势/差评",
         "tag": "不够同步+知识点缺失",
-        "sourceFileId": "f6"
+        "sourceFileId": "f6",
+        "audioClip": "/audio/v080.mp3"
       },
       {
         "id": "v081",
