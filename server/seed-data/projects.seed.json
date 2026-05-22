@@ -45,7 +45,8 @@
         "dimension": "需求认知",
         "subDimension": "诉求是什么？",
         "tag": "学科启蒙",
-        "sourceFileId": "f1"
+        "sourceFileId": "f1",
+        "audioClip": "/audio/v001.mp3"
       },
       {
         "id": "v002",
@@ -56,7 +57,8 @@
         "dimension": "需求认知",
         "subDimension": "诉求是什么？",
         "tag": "学科启蒙",
-        "sourceFileId": "f1"
+        "sourceFileId": "f1",
+        "audioClip": "/audio/v002.mp3"
       },
       {
         "id": "v003",
@@ -89,7 +91,8 @@
         "dimension": "需求认知",
         "subDimension": "诉求是什么？",
         "tag": "兴趣启蒙",
-        "sourceFileId": "f1"
+        "sourceFileId": "f1",
+        "audioClip": "/audio/v005.mp3"
       },
       {
         "id": "v006",
@@ -111,7 +114,8 @@
         "dimension": "需求认知",
         "subDimension": "诉求是什么？",
         "tag": "衔接先修",
-        "sourceFileId": "f3"
+        "sourceFileId": "f3",
+        "audioClip": "/audio/v007.mp3"
       },
       {
         "id": "v008",
@@ -146,7 +150,8 @@
         "dimension": "需求认知",
         "subDimension": "对「启蒙」的要求&态度",
         "tag": "学科启蒙态度",
-        "sourceFileId": "f1"
+        "sourceFileId": "f1",
+        "audioClip": "/audio/v010.mp3"
       },
       {
         "id": "v011",
@@ -190,7 +195,8 @@
         "dimension": "需求认知",
         "subDimension": "对「启蒙」的要求&态度",
         "tag": "学科启蒙态度",
-        "sourceFileId": "f2"
+        "sourceFileId": "f2",
+        "audioClip": "/audio/v014.mp3"
       },
       {
         "id": "v015",
@@ -201,7 +207,8 @@
         "dimension": "需求认知",
         "subDimension": "「启蒙有效」的标准&预期",
         "tag": "能说出原理",
-        "sourceFileId": "f1"
+        "sourceFileId": "f1",
+        "audioClip": "/audio/v015.mp3"
       },
       {
         "id": "v016",
@@ -235,7 +242,8 @@
         "dimension": "需求认知",
         "subDimension": "「启蒙有效」的标准&预期",
         "tag": "搭建知识框架",
-        "sourceFileId": "f1"
+        "sourceFileId": "f1",
+        "audioClip": "/audio/v018.mp3"
       },
       {
         "id": "v019",
@@ -257,7 +265,8 @@
         "dimension": "购买决策",
         "subDimension": "触达渠道：在哪看到的？",
         "tag": "小红书",
-        "sourceFileId": "f1"
+        "sourceFileId": "f1",
+        "audioClip": "/audio/v020.mp3"
       },
       {
         "id": "v021",
@@ -279,7 +288,8 @@
         "dimension": "购买决策",
         "subDimension": "触达渠道：在哪看到的？",
         "tag": "抖音",
-        "sourceFileId": "f2"
+        "sourceFileId": "f2",
+        "audioClip": "/audio/v022.mp3"
       },
       {
         "id": "v023",
@@ -290,7 +300,8 @@
         "dimension": "购买决策",
         "subDimension": "触达渠道：在哪看到的？",
         "tag": "微信直播",
-        "sourceFileId": "f3"
+        "sourceFileId": "f3",
+        "audioClip": "/audio/v023.mp3"
       },
       {
         "id": "v024",
@@ -324,7 +335,8 @@
         "dimension": "购买决策",
         "subDimension": "吸引卖点：什么内容吸引促使购买？",
         "tag": "永久有效+比竞品好",
-        "sourceFileId": "f1"
+        "sourceFileId": "f1",
+        "audioClip": "/audio/v026.mp3"
       },
       {
         "id": "v027",
@@ -335,7 +347,8 @@
         "dimension": "购买决策",
         "subDimension": "吸引卖点：什么内容吸引促使购买？",
         "tag": "专业背书",
-        "sourceFileId": "f1"
+        "sourceFileId": "f1",
+        "audioClip": "/audio/v027.mp3"
       },
       {
         "id": "v028",
@@ -346,7 +359,8 @@
         "dimension": "购买决策",
         "subDimension": "吸引卖点：什么内容吸引促使购买？",
         "tag": "触屏操作+模拟实验",
-        "sourceFileId": "f1"
+        "sourceFileId": "f1",
+        "audioClip": "/audio/v028.mp3"
       },
       {
         "id": "v029",
@@ -379,7 +393,8 @@
         "dimension": "购买决策",
         "subDimension": "吸引卖点：什么内容吸引促使购买？",
         "tag": "贴近生活",
-        "sourceFileId": "f3"
+        "sourceFileId": "f3",
+        "audioClip": "/audio/v031.mp3"
       },
       {
         "id": "v032",
@@ -424,7 +439,8 @@
         "dimension": "购买决策",
         "subDimension": "购前预期：买前希望孩子怎么学？",
         "tag": "信任团队品质",
-        "sourceFileId": "f1"
+        "sourceFileId": "f1",
+        "audioClip": "/audio/v035.mp3"
       },
       {
         "id": "v036",
@@ -435,7 +451,8 @@
         "dimension": "产品体验",
         "subDimension": "使用场景：什么时候学？",
         "tag": "碎片时间",
-        "sourceFileId": "f1"
+        "sourceFileId": "f1",
+        "audioClip": "/audio/v036.mp3"
       },
       {
         "id": "v037",
@@ -491,7 +508,8 @@
         "dimension": "产品体验",
         "subDimension": "优势/好评",
         "tag": "内容质量高",
-        "sourceFileId": "f1"
+        "sourceFileId": "f1",
+        "audioClip": "/audio/v041.mp3"
       },
       {
         "id": "v042",
@@ -560,7 +578,8 @@
         "dimension": "产品体验",
         "subDimension": "优势/好评",
         "tag": "安全模拟实验",
-        "sourceFileId": "f1"
+        "sourceFileId": "f1",
+        "audioClip": "/audio/v047.mp3"
       },
       {
         "id": "v048",
@@ -571,7 +590,8 @@
         "dimension": "产品体验",
         "subDimension": "劣势/差评",
         "tag": "不够真实",
-        "sourceFileId": "f1"
+        "sourceFileId": "f1",
+        "audioClip": "/audio/v048.mp3"
       },
       {
         "id": "v049",
@@ -594,7 +614,8 @@
         "dimension": "产品体验",
         "subDimension": "劣势/差评",
         "tag": "没用过",
-        "sourceFileId": "f1"
+        "sourceFileId": "f1",
+        "audioClip": "/audio/v050.mp3"
       },
       {
         "id": "v051",
@@ -605,7 +626,8 @@
         "dimension": "产品体验",
         "subDimension": "劣势/差评",
         "tag": "评价一般",
-        "sourceFileId": "f1"
+        "sourceFileId": "f1",
+        "audioClip": "/audio/v051.mp3"
       },
       {
         "id": "v052",
@@ -616,7 +638,8 @@
         "dimension": "产品体验",
         "subDimension": "劣势/差评",
         "tag": "内容冗余",
-        "sourceFileId": "f1"
+        "sourceFileId": "f1",
+        "audioClip": "/audio/v052.mp3"
       },
       {
         "id": "v053",
@@ -627,7 +650,8 @@
         "dimension": "产品体验",
         "subDimension": "劣势/差评",
         "tag": "缺乏学习节奏",
-        "sourceFileId": "f3"
+        "sourceFileId": "f3",
+        "audioClip": "/audio/v053.mp3"
       },
       {
         "id": "v054",
@@ -638,7 +662,8 @@
         "dimension": "产品体验",
         "subDimension": "劣势/差评",
         "tag": "收费不透明",
-        "sourceFileId": "f1"
+        "sourceFileId": "f1",
+        "audioClip": "/audio/v054.mp3"
       },
       {
         "id": "v055",
@@ -672,7 +697,8 @@
         "dimension": "需求认知",
         "subDimension": "诉求是什么？",
         "tag": "衔接先修",
-        "sourceFileId": "f5"
+        "sourceFileId": "f5",
+        "audioClip": "/audio/v057.mp3"
       },
       {
         "id": "v058",
@@ -694,7 +720,8 @@
         "dimension": "需求认知",
         "subDimension": "诉求是什么？",
         "tag": "校内同步学科学",
-        "sourceFileId": "f6"
+        "sourceFileId": "f6",
+        "audioClip": "/audio/v059.mp3"
       },
       {
         "id": "v060",
@@ -716,7 +743,8 @@
         "dimension": "需求认知",
         "subDimension": "对「启蒙」的要求&态度",
         "tag": "学科启蒙态度",
-        "sourceFileId": "f6"
+        "sourceFileId": "f6",
+        "audioClip": "/audio/v061.mp3"
       },
       {
         "id": "v062",
@@ -727,7 +755,8 @@
         "dimension": "需求认知",
         "subDimension": "「启蒙有效」的标准&预期",
         "tag": "启蒙后转应试",
-        "sourceFileId": "f5"
+        "sourceFileId": "f5",
+        "audioClip": "/audio/v062.mp3"
       },
       {
         "id": "v063",
@@ -738,7 +767,8 @@
         "dimension": "需求认知",
         "subDimension": "「启蒙有效」的标准&预期",
         "tag": "理解掌握+兴趣",
-        "sourceFileId": "f6"
+        "sourceFileId": "f6",
+        "audioClip": "/audio/v063.mp3"
       },
       {
         "id": "v064",
@@ -749,7 +779,8 @@
         "dimension": "购买决策",
         "subDimension": "触达渠道：在哪看到的？",
         "tag": "抖音直播间",
-        "sourceFileId": "f5"
+        "sourceFileId": "f5",
+        "audioClip": "/audio/v064.mp3"
       },
       {
         "id": "v065",
@@ -771,7 +802,8 @@
         "dimension": "购买决策",
         "subDimension": "触达渠道：在哪看到的？",
         "tag": "微信公众号+直播",
-        "sourceFileId": "f6"
+        "sourceFileId": "f6",
+        "audioClip": "/audio/v066.mp3"
       },
       {
         "id": "v067",
@@ -782,7 +814,8 @@
         "dimension": "购买决策",
         "subDimension": "吸引卖点：什么内容吸引促使购买？",
         "tag": "AR+题库",
-        "sourceFileId": "f5"
+        "sourceFileId": "f5",
+        "audioClip": "/audio/v067.mp3"
       },
       {
         "id": "v068",
@@ -804,7 +837,8 @@
         "dimension": "购买决策",
         "subDimension": "吸引卖点：什么内容吸引促使购买？",
         "tag": "动画直观+校内同步+互动",
-        "sourceFileId": "f6"
+        "sourceFileId": "f6",
+        "audioClip": "/audio/v069.mp3"
       },
       {
         "id": "v070",
@@ -815,7 +849,8 @@
         "dimension": "购买决策",
         "subDimension": "吸引卖点：什么内容吸引促使购买？",
         "tag": "持续迭代",
-        "sourceFileId": "f6"
+        "sourceFileId": "f6",
+        "audioClip": "/audio/v070.mp3"
       },
       {
         "id": "v071",
@@ -826,7 +861,8 @@
         "dimension": "购买决策",
         "subDimension": "购前预期：买前希望孩子怎么学？",
         "tag": "先启蒙后应试",
-        "sourceFileId": "f5"
+        "sourceFileId": "f5",
+        "audioClip": "/audio/v071.mp3"
       },
       {
         "id": "v072",
@@ -870,7 +906,8 @@
         "dimension": "产品体验",
         "subDimension": "优势/好评",
         "tag": "动画形式好",
-        "sourceFileId": "f6"
+        "sourceFileId": "f6",
+        "audioClip": "/audio/v075.mp3"
       },
       {
         "id": "v076",
@@ -881,7 +918,8 @@
         "dimension": "产品体验",
         "subDimension": "优势/好评",
         "tag": "同步课内好用",
-        "sourceFileId": "f6"
+        "sourceFileId": "f6",
+        "audioClip": "/audio/v076.mp3"
       },
       {
         "id": "v077",
@@ -892,7 +930,8 @@
         "dimension": "产品体验",
         "subDimension": "优势/好评",
         "tag": "孩子喜欢",
-        "sourceFileId": "f5"
+        "sourceFileId": "f5",
+        "audioClip": "/audio/v077.mp3"
       },
       {
         "id": "v078",
@@ -903,7 +942,8 @@
         "dimension": "产品体验",
         "subDimension": "劣势/差评",
         "tag": "内容不吸引孩子",
-        "sourceFileId": "f5"
+        "sourceFileId": "f5",
+        "audioClip": "/audio/v078.mp3"
       },
       {
         "id": "v079",
@@ -914,7 +954,8 @@
         "dimension": "产品体验",
         "subDimension": "劣势/差评",
         "tag": "使用率低+入口难找",
-        "sourceFileId": "f6"
+        "sourceFileId": "f6",
+        "audioClip": "/audio/v079.mp3"
       },
       {
         "id": "v080",
@@ -936,7 +977,8 @@
         "dimension": "产品体验",
         "subDimension": "劣势/差评",
         "tag": "内容不够多",
-        "sourceFileId": "f6"
+        "sourceFileId": "f6",
+        "audioClip": "/audio/v081.mp3"
       }
     ],
     "dimensionSummaries": [

@@ -293,6 +293,67 @@ function AudioPlayButton({ src }: { src: string }) {
   );
 }
 
+function DragScrollContainer({ children }: { children: React.ReactNode }) {
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = React.useState(false);
+  const [scrollPct, setScrollPct] = React.useState(0);
+  const startX = React.useRef(0);
+  const scrollLeftStart = React.useRef(0);
+
+  const onMouseDown = (e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).closest('button, input, a')) return;
+    setIsDragging(true);
+    startX.current = e.pageX;
+    scrollLeftStart.current = scrollRef.current?.scrollLeft || 0;
+  };
+
+  const onMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    e.preventDefault();
+    const dx = e.pageX - startX.current;
+    if (scrollRef.current) {
+      scrollRef.current.scrollLeft = scrollLeftStart.current - dx;
+    }
+  };
+
+  const onMouseUp = () => setIsDragging(false);
+
+  const onScroll = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const max = el.scrollWidth - el.clientWidth;
+    setScrollPct(max > 0 ? (el.scrollLeft / max) * 100 : 0);
+  };
+
+  const onTrackClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const pct = (e.clientX - rect.left) / rect.width;
+    el.scrollLeft = pct * (el.scrollWidth - el.clientWidth);
+  };
+
+  return (
+    <div>
+      <div onClick={onTrackClick} className="mb-2 h-1.5 bg-gray-100 rounded-full cursor-pointer relative">
+        <div className="absolute inset-y-0 left-0 bg-indigo-300 rounded-full transition-all" style={{ width: `${Math.max(scrollPct, 2)}%` }} />
+      </div>
+      <div
+        ref={scrollRef}
+        onMouseDown={onMouseDown}
+        onMouseMove={onMouseMove}
+        onMouseUp={onMouseUp}
+        onMouseLeave={onMouseUp}
+        onScroll={onScroll}
+        className={`overflow-x-auto scrollbar-hide ${isDragging ? 'cursor-grabbing select-none' : 'cursor-grab'}`}
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
 function getFileType(name: string): 'audio' | 'video' | 'document' {
   const ext = name.split('.').pop()?.toLowerCase() ?? '';
   if (AUDIO_EXTENSIONS.has(ext)) return 'audio';
@@ -813,7 +874,7 @@ const InsightsPage = ({ project, onParseFiles, onAddFiles, onDeleteFile, onDelet
                         ))}
                       </div>
 
-                      <div className="overflow-x-auto">
+                      <DragScrollContainer>
                       <div className="flex gap-6 min-w-max">
                         {BRANDS.filter(b => selectedBrands.includes(b.name)).map(brand => {
                           const brandVOCs = vocs.filter(v => v.brand === brand.name);
@@ -867,7 +928,7 @@ const InsightsPage = ({ project, onParseFiles, onAddFiles, onDeleteFile, onDelet
                           );
                         })}
                       </div>
-                      </div>
+                      </DragScrollContainer>
                     </div>
                   </motion.div>
                 )}
