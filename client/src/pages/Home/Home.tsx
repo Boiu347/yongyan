@@ -216,35 +216,71 @@ const DOC_EXTENSIONS = new Set(['pdf', 'doc', 'docx', 'txt', 'md']);
 
 function AudioPlayButton({ src }: { src: string }) {
   const [playing, setPlaying] = React.useState(false);
+  const [progress, setProgress] = React.useState(0);
+  const [duration, setDuration] = React.useState(0);
+  const [currentTime, setCurrentTime] = React.useState(0);
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
+  const progressRef = React.useRef<HTMLDivElement>(null);
 
-  const toggle = () => {
+  const getAudio = () => {
     if (!audioRef.current) {
       audioRef.current = new Audio(src);
-      audioRef.current.onended = () => setPlaying(false);
+      audioRef.current.onended = () => { setPlaying(false); setProgress(0); setCurrentTime(0); };
+      audioRef.current.onloadedmetadata = () => setDuration(audioRef.current!.duration);
+      audioRef.current.ontimeupdate = () => {
+        const a = audioRef.current!;
+        setCurrentTime(a.currentTime);
+        setProgress(a.duration ? (a.currentTime / a.duration) * 100 : 0);
+      };
     }
+    return audioRef.current;
+  };
+
+  const toggle = () => {
+    const audio = getAudio();
     if (playing) {
-      audioRef.current.pause();
+      audio.pause();
       setPlaying(false);
     } else {
-      audioRef.current.play();
+      audio.play();
       setPlaying(true);
     }
   };
 
-  React.useEffect(() => {
-    return () => { audioRef.current?.pause(); };
-  }, []);
+  const seek = (e: React.MouseEvent<HTMLDivElement>) => {
+    const audio = getAudio();
+    const rect = e.currentTarget.getBoundingClientRect();
+    const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    audio.currentTime = pct * audio.duration;
+  };
+
+  const formatTime = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+
+  React.useEffect(() => { return () => { audioRef.current?.pause(); }; }, []);
+
+  if (!playing && progress === 0) {
+    return (
+      <button
+        onClick={toggle}
+        className="flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium bg-gray-100 text-gray-500 hover:bg-indigo-50 hover:text-indigo-600 transition-all"
+        title="播放原声"
+      >
+        <Play size={10} />
+        <span>原声</span>
+      </button>
+    );
+  }
 
   return (
-    <button
-      onClick={toggle}
-      className={`flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium transition-all ${playing ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-500 hover:bg-indigo-50 hover:text-indigo-600'}`}
-      title={playing ? '暂停' : '播放原声'}
-    >
-      {playing ? <Pause size={10} /> : <Play size={10} />}
-      <span>原声</span>
-    </button>
+    <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-indigo-50 border border-indigo-100">
+      <button onClick={toggle} className="text-indigo-600 hover:text-indigo-800" title={playing ? '暂停' : '继续'}>
+        {playing ? <Pause size={12} /> : <Play size={12} />}
+      </button>
+      <div ref={progressRef} onClick={seek} className="w-20 h-1.5 bg-indigo-100 rounded-full cursor-pointer relative">
+        <div className="absolute inset-y-0 left-0 bg-indigo-500 rounded-full" style={{ width: `${progress}%` }} />
+      </div>
+      <span className="text-[9px] text-indigo-500 font-mono w-8">{formatTime(currentTime)}</span>
+    </div>
   );
 }
 
