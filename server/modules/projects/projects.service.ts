@@ -55,6 +55,14 @@ export class ProjectsService {
         const raw = readFileSync(this.dataFile, 'utf-8');
         this.projects = JSON.parse(raw);
         this.logger.log(`Loaded ${this.projects.length} projects from disk`);
+      } else {
+        const seedFile = join(process.cwd(), 'server', 'seed-data', 'projects.seed.json');
+        if (existsSync(seedFile)) {
+          const raw = readFileSync(seedFile, 'utf-8');
+          this.projects = JSON.parse(raw);
+          this.saveToDisk();
+          this.logger.log(`Loaded ${this.projects.length} projects from seed data`);
+        }
       }
     } catch (err) {
       this.logger.warn(`Failed to load projects from disk: ${err}`);

@@ -1,0 +1,178 @@
+[
+  {
+    "id": "proj-2026-05-voc-study",
+    "name": "科学启蒙产品用户访谈研究",
+    "dateRange": "2026年5月12日-15日",
+    "files": [
+      {"id": "f1", "name": "用户访谈1：二年级-山东济宁-妙懂&十分通&NB实验室", "type": "document"},
+      {"id": "f2", "name": "用户访谈2：三年级-北京昌平-学而思科学&NB实验室", "type": "document"},
+      {"id": "f3", "name": "用户访谈3：二年级-广东中山-从小学物理（视频号购买）", "type": "document"},
+      {"id": "f4", "name": "用户访谈4：二年级-北京顺义-从小学物理&NB实验室&南开大学AI物理课", "type": "document"}
+    ],
+    "parsedVOCs": [
+      {"id": "v001", "brand": "洋葱", "text": "洋葱之前不就是专门做数学的吗？就是当时不是觉得那个就是低年级的话，不是得需要计算，得需要有一定的这个打基础。", "respondent": "王女士（访谈1）", "sentiment": "neutral", "dimension": "需求认知", "subDimension": "诉求是什么？", "tag": "学科启蒙", "sourceFileId": "f1"},
+      {"id": "v002", "brand": "洋葱", "text": "也不是说难度比较高，可能更希望有一些思维锻炼方面的一些东西，还有一个可能对他这个基础，先了解一下他目前的一个状态。", "respondent": "王女士（访谈1）", "sentiment": "neutral", "dimension": "需求认知", "subDimension": "诉求是什么？", "tag": "学科启蒙", "sourceFileId": "f1"},
+      {"id": "v003", "brand": "万物指南（物理十分通）", "text": "没什么特殊的规划，我就觉得他可以大概了解一下，有个概念就行。就像他小的时候看绘本一样。", "respondent": "王女士（访谈1）", "sentiment": "neutral", "dimension": "需求认知", "subDimension": "诉求是什么？", "tag": "兴趣启蒙", "sourceFileId": "f1"},
+      {"id": "v004", "brand": "万物指南（物理十分通）", "text": "不是说让他学习，单纯的话不是说为了他校内的学习。而是让他了解一下，就是有一些自然现象，他小孩不是有的时候可能会问吗？", "respondent": "王女士（访谈1）", "sentiment": "neutral", "dimension": "需求认知", "subDimension": "诉求是什么？", "tag": "兴趣启蒙", "sourceFileId": "f1"},
+      {"id": "v005", "brand": "NB虚拟实验室（NoBook）", "text": "NB实验室是因为我当时觉得他那个操作比较方便一点，他演当时演示的操作看上去比较直观的样子。", "respondent": "王女士（访谈1）", "sentiment": "positive", "dimension": "需求认知", "subDimension": "诉求是什么？", "tag": "兴趣启蒙", "sourceFileId": "f1"},
+      {"id": "v006", "brand": "学而思", "text": "想着那个数学这块，想提高一下孩子这个数学思维能力。然后也是为了以后的初中，包括高中的数学的形成优势学科也是对理化起到一定帮助。", "respondent": "陈女士（访谈2）", "sentiment": "neutral", "dimension": "需求认知", "subDimension": "诉求是什么？", "tag": "衔接先修", "sourceFileId": "f2"},
+      {"id": "v007", "brand": "洋葱", "text": "因为以后到初中也会学到物理。然后可以提前让他认识知道一些就是跟物理相关的知识。", "respondent": "李女士（访谈3）", "sentiment": "neutral", "dimension": "需求认知", "subDimension": "诉求是什么？", "tag": "衔接先修", "sourceFileId": "f3"},
+      {"id": "v008", "brand": "洋葱", "text": "还是从小激发这个物理的学习兴趣，然后也能就是说不排斥以后，因为小学不是最终的，以后也会有更高的，毕竟升学需求啊。", "respondent": "关女士（访谈4）", "sentiment": "neutral", "dimension": "需求认知", "subDimension": "诉求是什么？", "tag": "兴趣启蒙", "sourceFileId": "f4"},
+      {"id": "v009", "brand": "洋葱", "text": "不想让他之后对理科失去兴趣，所以抓住这个从小应该掌握这个理科这个黄金期，让他去早早的有所渗透。", "respondent": "关女士（访谈4）", "sentiment": "neutral", "dimension": "需求认知", "subDimension": "诉求是什么？", "tag": "兴趣启蒙", "sourceFileId": "f4"},
+
+      {"id": "v010", "brand": "万物指南（物理十分通）", "text": "我觉得像这种高质量的这种内容，哪怕他就是看一次来，我觉得都已经达到我的预期了。", "respondent": "王女士（访谈1）", "sentiment": "positive", "dimension": "需求认知", "subDimension": "对「启蒙」的要求&态度", "tag": "学科启蒙态度", "sourceFileId": "f1"},
+      {"id": "v011", "brand": "万物指南（物理十分通）", "text": "小学生来说的话，像他现在二年级。这些就足够了，我不需要他真的去达到，你说小学就达到去把初中的内容都学完吗？没有必要。", "respondent": "王女士（访谈1）", "sentiment": "neutral", "dimension": "需求认知", "subDimension": "对「启蒙」的要求&态度", "tag": "学科启蒙态度", "sourceFileId": "f1"},
+      {"id": "v012", "brand": "洋葱", "text": "我觉得，反正二年级我觉得还可以。就是就是，还不太着急，不是特别着急的那种心态。因为他现在年龄在班里可能是最小的，我就觉得能起码跟得上不落下就行了。", "respondent": "王女士（访谈1）", "sentiment": "neutral", "dimension": "需求认知", "subDimension": "对「启蒙」的要求&态度", "tag": "学科启蒙态度", "sourceFileId": "f1"},
+      {"id": "v013", "brand": "学而思", "text": "没有，因为你自己也看过一些，包括抖音上的一些教育博主也好，还有一些专家的讲说那个小学的分数主占12年之20或者是更少。习惯包括一些其他的大部分的。", "respondent": "陈女士（访谈2）", "sentiment": "neutral", "dimension": "需求认知", "subDimension": "对「启蒙」的要求&态度", "tag": "学科启蒙态度", "sourceFileId": "f2"},
+      {"id": "v014", "brand": "洋葱", "text": "因为我本身我是个文科生，我的理科就不是很。包括以后的选专业的选择文科，不是路子比较窄。", "respondent": "陈女士（访谈2）", "sentiment": "neutral", "dimension": "需求认知", "subDimension": "对「启蒙」的要求&态度", "tag": "学科启蒙态度", "sourceFileId": "f2"},
+
+      {"id": "v015", "brand": "万物指南（物理十分通）", "text": "就是让他大概了解一下这个内容，然后能够说出来一些，比如说一些原理是怎么回事，大概能说一下。有一个概念性的那个就行了。", "respondent": "王女士（访谈1）", "sentiment": "neutral", "dimension": "需求认知", "subDimension": "「启蒙有效」的标准&预期", "tag": "能说出原理", "sourceFileId": "f1"},
+      {"id": "v016", "brand": "洋葱", "text": "有的，有。就是让他多坚持，好像有基本上不要说每天学，但是基本上可以一个星期学两三次这样子，可以慢地接触一下就是生活中的物理，提前为初中打一下基础。", "respondent": "李女士（访谈3）", "sentiment": "neutral", "dimension": "需求认知", "subDimension": "「启蒙有效」的标准&预期", "tag": "坚持学习频率", "sourceFileId": "f3"},
+      {"id": "v017", "brand": "洋葱", "text": "也能多长长见识，在生活当中也能实际给等等得到运用，把知识运用到实际生活当中。", "respondent": "关女士（访谈4）", "sentiment": "neutral", "dimension": "需求认知", "subDimension": "「启蒙有效」的标准&预期", "tag": "生活运用", "sourceFileId": "f4"},
+      {"id": "v018", "brand": "万物指南（物理十分通）", "text": "起码能给他搭一个历史的框架，知道这些朝代是怎么回事。包括以后即使他不学历史，但是起码提前了解一下。", "respondent": "王女士（访谈1）", "sentiment": "neutral", "dimension": "需求认知", "subDimension": "「启蒙有效」的标准&预期", "tag": "搭建知识框架", "sourceFileId": "f1"},
+
+      {"id": "v019", "brand": "妙懂", "text": "小红书看到的，当时我之前的时候加过一个就是卖东西的一个群。但是里面他有时候会推荐一些东西。", "respondent": "王女士（访谈1）", "sentiment": "neutral", "dimension": "购买决策", "subDimension": "触达渠道：在哪看到的？", "tag": "小红书+学习群", "sourceFileId": "f1"},
+      {"id": "v020", "brand": "NB虚拟实验室（NoBook）", "text": "NB说实话是在小红书上看的。", "respondent": "王女士（访谈1）", "sentiment": "neutral", "dimension": "购买决策", "subDimension": "触达渠道：在哪看到的？", "tag": "小红书", "sourceFileId": "f1"},
+      {"id": "v021", "brand": "万物指南（物理十分通）", "text": "也是学习群，然后我有也同学，也有我的同学给我推荐的。", "respondent": "王女士（访谈1）", "sentiment": "neutral", "dimension": "购买决策", "subDimension": "触达渠道：在哪看到的？", "tag": "学习群+朋友推荐", "sourceFileId": "f1"},
+      {"id": "v022", "brand": "学而思", "text": "他一年级的时候就开始学了。我是在抖音，对，通过抖音了解。", "respondent": "陈女士（访谈2）", "sentiment": "neutral", "dimension": "购买决策", "subDimension": "触达渠道：在哪看到的？", "tag": "抖音", "sourceFileId": "f2"},
+      {"id": "v023", "brand": "洋葱", "text": "现在微信那个鸭妈那个直播。好像女儿派里面的那个鸭妈。", "respondent": "李女士（访谈3）", "sentiment": "neutral", "dimension": "购买决策", "subDimension": "触达渠道：在哪看到的？", "tag": "微信直播", "sourceFileId": "f3"},
+      {"id": "v024", "brand": "洋葱", "text": "就是微信公众号。他是公众号博主。都是在一个微信群里面，社群都是很多年的老粉丝。", "respondent": "关女士（访谈4）", "sentiment": "neutral", "dimension": "购买决策", "subDimension": "触达渠道：在哪看到的？", "tag": "微信公众号+社群", "sourceFileId": "f4"},
+
+      {"id": "v025", "brand": "妙懂", "text": "我当时我说实话，其他的我都不太记得了，当时他就说是永久有效。", "respondent": "王女士（访谈1）", "sentiment": "neutral", "dimension": "购买决策", "subDimension": "吸引卖点：什么内容吸引促使购买？", "tag": "永久有效", "sourceFileId": "f1"},
+      {"id": "v026", "brand": "万物指南（物理十分通）", "text": "他就说因为他应该是有买过妙懂。然后他就说这个比妙懂好。而且这个的话也是永久的。", "respondent": "王女士（访谈1）", "sentiment": "positive", "dimension": "购买决策", "subDimension": "吸引卖点：什么内容吸引促使购买？", "tag": "永久有效+比竞品好", "sourceFileId": "f1"},
+      {"id": "v027", "brand": "万物指南（物理十分通）", "text": "因为我就觉着他万物指南的团队比较靠谱，因为他不是个什么不刷题的吴姥姥吗？她这种已经荣誉加身的人，比较爱惜羽毛一点。", "respondent": "王女士（访谈1）", "sentiment": "positive", "dimension": "购买决策", "subDimension": "吸引卖点：什么内容吸引促使购买？", "tag": "专业背书", "sourceFileId": "f1"},
+      {"id": "v028", "brand": "NB虚拟实验室（NoBook）", "text": "可以操作，然后它因为它那个可以直接触屏，然后就是它的所有的实验都可以通过这种触屏来模拟实验。", "respondent": "王女士（访谈1）", "sentiment": "positive", "dimension": "购买决策", "subDimension": "吸引卖点：什么内容吸引促使购买？", "tag": "触屏操作+模拟实验", "sourceFileId": "f1"},
+      {"id": "v029", "brand": "NB虚拟实验室（NoBook）", "text": "NB的时候是因为一个是它是也是永久的。然后觉得就是放那以后万一要是想看看的话可以点点。", "respondent": "王女士（访谈1）", "sentiment": "neutral", "dimension": "购买决策", "subDimension": "吸引卖点：什么内容吸引促使购买？", "tag": "永久有效", "sourceFileId": "f1"},
+      {"id": "v030", "brand": "洋葱", "text": "因为它是终身的。买了之后我就可以慢慢学，以后也可以回放看这种。", "respondent": "李女士（访谈3）", "sentiment": "positive", "dimension": "购买决策", "subDimension": "吸引卖点：什么内容吸引促使购买？", "tag": "永久有效", "sourceFileId": "f3"},
+      {"id": "v031", "brand": "洋葱", "text": "因为他说素材可以从生活中随手可以随时可以找到。然后就可以提前对那个物理启蒙。", "respondent": "李女士（访谈3）", "sentiment": "positive", "dimension": "购买决策", "subDimension": "吸引卖点：什么内容吸引促使购买？", "tag": "贴近生活", "sourceFileId": "f3"},
+      {"id": "v032", "brand": "洋葱", "text": "性价比也很高，孩子又喜欢，一些内容上又能查缺补漏。然后产品形式包括也很多样，也是不断在更新的。", "respondent": "关女士（访谈4）", "sentiment": "positive", "dimension": "购买决策", "subDimension": "吸引卖点：什么内容吸引促使购买？", "tag": "性价比高+内容丰富", "sourceFileId": "f4"},
+
+      {"id": "v033", "brand": "妙懂", "text": "就是跟我刚才说的，就是相当于让孩子提前了解一下，大概让他有个认知，然后到时候不觉得陌生。", "respondent": "王女士（访谈1）", "sentiment": "neutral", "dimension": "购买决策", "subDimension": "购前预期：买前希望孩子怎么学？", "tag": "提前认知", "sourceFileId": "f1"},
+      {"id": "v034", "brand": "洋葱", "text": "没有。当时就是可能就是想先买着，然后对于具体怎么学了之后有什么其实是没有一个预设的。", "respondent": "李女士（访谈3）", "sentiment": "neutral", "dimension": "购买决策", "subDimension": "购前预期：买前希望孩子怎么学？", "tag": "先买着再说", "sourceFileId": "f3"},
+      {"id": "v035", "brand": "万物指南（物理十分通）", "text": "我觉得他既然物理能做好，他化学肯定也能做好。我化学连看都没看就买了。", "respondent": "王女士（访谈1）", "sentiment": "positive", "dimension": "购买决策", "subDimension": "购前预期：买前希望孩子怎么学？", "tag": "信任团队品质", "sourceFileId": "f1"},
+
+      {"id": "v036", "brand": "NB虚拟实验室（NoBook）", "text": "偶尔会看，偶尔就是有的时候因为他有时间不是很多，因为我们现在基本上时间都会放在他的课后的课外的时间都放在他的英语上。", "respondent": "王女士（访谈1）", "sentiment": "neutral", "dimension": "产品体验", "subDimension": "使用场景：什么时候学？", "tag": "碎片时间", "sourceFileId": "f1"},
+      {"id": "v037", "brand": "洋葱", "text": "有时间就带他看看。但是我们没有一个规划是固定一个时间去学这样子的，就是有时候偶尔这段时间有空我打开去看，他就跟着我看。", "respondent": "李女士（访谈3）", "sentiment": "neutral", "dimension": "产品体验", "subDimension": "使用场景：什么时候学？", "tag": "碎片时间", "sourceFileId": "f3"},
+      {"id": "v038", "brand": "万物指南（物理十分通）", "text": "五一就出去玩了，回来之后就开学了，这还没有过周末呢。我准备打算那个周末，就这周末的时候带他一块看一下的。", "respondent": "王女士（访谈1）", "sentiment": "neutral", "dimension": "产品体验", "subDimension": "使用场景：什么时候学？", "tag": "周末", "sourceFileId": "f1"},
+      {"id": "v039", "brand": "洋葱", "text": "洋葱学园的从小学物理，如果说我不管的话，他每天他都会刷。但是我会管他。他要想的话，更多时候会胜于学这个数学。", "respondent": "关女士（访谈4）", "sentiment": "positive", "dimension": "产品体验", "subDimension": "使用场景：什么时候学？", "tag": "每天", "sourceFileId": "f4"},
+
+      {"id": "v040", "brand": "万物指南（物理十分通）", "text": "物理十分通里面非常的简洁明了。没有过多的废话。短而精的这种，不是那种布灵的比较少。", "respondent": "王女士（访谈1）", "sentiment": "positive", "dimension": "产品体验", "subDimension": "优势/好评", "tag": "内容质量高", "sourceFileId": "f1"},
+      {"id": "v041", "brand": "万物指南（物理十分通）", "text": "我觉得它的质量是比较高的，包括它的一些跟它的那个博物馆啊，它的博物馆的那些藏品非常的高清拍的，它是都是有授权的。", "respondent": "王女士（访谈1）", "sentiment": "positive", "dimension": "产品体验", "subDimension": "优势/好评", "tag": "内容质量高", "sourceFileId": "f1"},
+      {"id": "v042", "brand": "万物指南（物理十分通）", "text": "他后面是跟着题的，每个题都是相当于题库。你大了以后包括上初中了以后都还能用。", "respondent": "王女士（访谈1）", "sentiment": "positive", "dimension": "产品体验", "subDimension": "优势/好评", "tag": "有体系", "sourceFileId": "f1"},
+      {"id": "v043", "brand": "洋葱", "text": "孩子感兴趣就是他也能看得懂里边的讲解。然后再根据理解的能力，他自己再进行后面的答题，算是一个小的闭环。", "respondent": "关女士（访谈4）", "sentiment": "positive", "dimension": "产品体验", "subDimension": "优势/好评", "tag": "孩子喜欢", "sourceFileId": "f4"},
+      {"id": "v044", "brand": "洋葱", "text": "它的展现的形式的话，孩子喜欢这种动画形式的。孩子感兴趣就是第一要素，他如果说有兴趣，其实现在包括看到的效果，他自主能学习。", "respondent": "关女士（访谈4）", "sentiment": "positive", "dimension": "产品体验", "subDimension": "优势/好评", "tag": "孩子喜欢+动画形式", "sourceFileId": "f4"},
+      {"id": "v045", "brand": "洋葱", "text": "他特别喜欢看那实验男做实验。他当成趣味里边学知识了，确实是很喜欢。", "respondent": "关女士（访谈4）", "sentiment": "positive", "dimension": "产品体验", "subDimension": "优势/好评", "tag": "孩子喜欢", "sourceFileId": "f4"},
+      {"id": "v046", "brand": "学而思", "text": "喜欢，因为他就是玩呀。他喜欢，然后你就不用怎么说，然后他就会主动地去做。他自己要求的，他自己要求报。", "respondent": "王女士（访谈1）", "sentiment": "positive", "dimension": "产品体验", "subDimension": "优势/好评", "tag": "孩子喜欢", "sourceFileId": "f1"},
+      {"id": "v047", "brand": "NB虚拟实验室（NoBook）", "text": "比较吸引我的就是有一些比较危险的一些实验，可以在比较安全的这种情况下能让孩子了解到。", "respondent": "王女士（访谈1）", "sentiment": "positive", "dimension": "产品体验", "subDimension": "优势/好评", "tag": "安全模拟实验", "sourceFileId": "f1"},
+
+      {"id": "v048", "brand": "NB虚拟实验室（NoBook）", "text": "模拟实验其实跟你实际做实验的话，他是有差距的。他也不能完全的，他只是模拟那个动画场景。跟你当时做实验的那种真实的感受是还是有很大区别的。", "respondent": "王女士（访谈1）", "sentiment": "negative", "dimension": "产品体验", "subDimension": "劣势/差评", "tag": "不够真实", "sourceFileId": "f1"},
+      {"id": "v049", "brand": "NB虚拟实验室（NoBook）", "text": "NB实验室利用率目前来讲还没有得到更好的优化，利用率不是很高。", "respondent": "关女士（访谈4）", "sentiment": "negative", "dimension": "产品体验", "subDimension": "劣势/差评", "tag": "利用率低", "sourceFileId": "f4"},
+      {"id": "v050", "brand": "妙懂", "text": "买了好久了。到现在就是孩子一眼都没看过。没给孩子看。我自己都还没怎么看。", "respondent": "王女士（访谈1）", "sentiment": "negative", "dimension": "产品体验", "subDimension": "劣势/差评", "tag": "没用过", "sourceFileId": "f1"},
+      {"id": "v051", "brand": "妙懂", "text": "反正也不是，反正就是他们就是评价说一般，也没有说不好，反正就一般。如果要接触到NB实验室万物指南的话，可能我就不买那个妙懂了。", "respondent": "王女士（访谈1）", "sentiment": "negative", "dimension": "产品体验", "subDimension": "劣势/差评", "tag": "评价一般", "sourceFileId": "f1"},
+      {"id": "v052", "brand": "洋葱", "text": "洋葱的那个视频好多那种啰里啰嗦的这些东西，反正就感觉就不灵的东西太多，太浪费时间。", "respondent": "王女士（访谈1）", "sentiment": "negative", "dimension": "产品体验", "subDimension": "劣势/差评", "tag": "内容冗余", "sourceFileId": "f1"},
+      {"id": "v053", "brand": "洋葱", "text": "它是全部内容已经开放给你看了嘛。所以就没有那种动力去一个个去完成。不像有些网课每天更新，有那种动力每天完成。", "respondent": "李女士（访谈3）", "sentiment": "negative", "dimension": "产品体验", "subDimension": "劣势/差评", "tag": "缺乏学习节奏", "sourceFileId": "f3"},
+      {"id": "v054", "brand": "洋葱", "text": "那个大会员也是那个开的时候，当时跟我说这是小学的所有内容都能看。结果发现什么期末复习什么规划那些都付费。感觉你说了都能用，结果点这个收费点那个收费，有一种上当的感觉。", "respondent": "王女士（访谈1）", "sentiment": "negative", "dimension": "产品体验", "subDimension": "劣势/差评", "tag": "收费不透明", "sourceFileId": "f1"},
+      {"id": "v055", "brand": "南开大学AI物理课", "text": "那边就是说涉及到的AI比较多，然后动画也不如洋葱做的吸引人，所以孩子更喜欢洋葱这边的。那边有点晦涩。", "respondent": "关女士（访谈4）", "sentiment": "negative", "dimension": "产品体验", "subDimension": "劣势/差评", "tag": "内容晦涩", "sourceFileId": "f4"},
+      {"id": "v056", "brand": "学而思", "text": "学而思科学的性价比不是特别高，如果要再要进阶的话，还需要再付费买更好的教具。", "respondent": "陈女士（访谈2）", "sentiment": "negative", "dimension": "产品体验", "subDimension": "劣势/差评", "tag": "性价比低", "sourceFileId": "f2"}
+    ],
+    "dimensionSummaries": [
+      {
+        "dimension": "需求认知",
+        "subDimension": "诉求是什么？",
+        "summary": "家长的核心诉求集中在两方面：一是为初中理科做准备的「衔接先修」，希望孩子提前接触物理概念不至陌生；二是从兴趣出发的「学科启蒙」，让孩子对自然现象有基本认知，满足好奇心。多数家长明确表示不是为了提前学完初中内容，而是希望孩子大概了解原理、有个概念。",
+        "brandSummaries": {
+          "洋葱": "用户购买洋葱从小学物理主要出于为初中理科打基础的考虑，希望激发孩子兴趣不排斥理科。",
+          "万物指南（物理十分通）": "用户看重的是让孩子了解自然现象、有个概念，明确不是为了校内学习而是出于认知拓展。",
+          "NB虚拟实验室（NoBook）": "购买动机主要是操作直观、能模拟实验，满足孩子动手了解原理的需求。",
+          "学而思": "家长考虑的是长期理科思维培养，希望通过数学思维课为理科打基础。"
+        }
+      },
+      {
+        "dimension": "需求认知",
+        "subDimension": "对「启蒙」的要求&态度",
+        "summary": "家长普遍持「不着急」的态度，认为小学阶段分数不重要，更关注长期习惯和兴趣培养。多数家长表示二三年级的孩子只要跟得上就行，不追求超前学习，注重的是让孩子有学习兴趣和基本认知能力，而非应试提分。",
+        "brandSummaries": {
+          "洋葱": "家长对洋葱的期待较为佛系，认为二年级还不需要太着急，主要是跟得上不落下。",
+          "万物指南（物理十分通）": "用户态度是「看一次就够了」，期望值设置较低，认为小学阶段有概念即可。",
+          "学而思": "家长关注长期效果而非短期分数，受教育博主影响认为小学分数占比不高。"
+        }
+      },
+      {
+        "dimension": "需求认知",
+        "subDimension": "「启蒙有效」的标准&预期",
+        "summary": "家长衡量启蒙效果的标准较为务实：能说出原理、搭建知识框架、在生活中运用知识。多数家长不期望孩子达到考试水平，而是希望孩子对科学有概念性认知，能在日常生活中自然理解一些现象。学习频率预期也不高，一周两三次即可。",
+        "brandSummaries": {
+          "万物指南（物理十分通）": "用户的标准是孩子能说出原理、搭建历史和科学的基本框架。",
+          "洋葱": "用户期望一周学两三次，通过生活中的物理现象做学科启蒙，为初中打基础。"
+        }
+      },
+      {
+        "dimension": "购买决策",
+        "subDimension": "触达渠道：在哪看到的？",
+        "summary": "触达渠道呈现多样化特征：小红书和微信学习群是最主要的信息源，其次是微信公众号博主直播和朋友推荐。抖音在学而思品牌的触达中发挥重要作用。家长普遍通过社群和KOL获取产品信息，信任熟人和长期关注的博主推荐。",
+        "brandSummaries": {
+          "妙懂": "主要通过小红书和学习群的推荐触达用户。",
+          "NB虚拟实验室（NoBook）": "用户在小红书自己刷到产品信息。",
+          "万物指南（物理十分通）": "通过学习群和朋友口碑推荐触达，社交信任是关键。",
+          "学而思": "通过抖音广告触达用户。",
+          "洋葱": "主要通过微信生态（公众号博主、直播间、社群）触达，KOL带货是核心路径。"
+        }
+      },
+      {
+        "dimension": "购买决策",
+        "subDimension": "吸引卖点：什么内容吸引促使购买？",
+        "summary": "「永久有效」是所有品牌中最具杀伤力的卖点，几乎每位用户都提到这一点是促使购买的关键因素。其次是专业背书（如吴姥姥IP）、性价比、贴近生活的内容设计。家长普遍存在「先囤着以后用」的心态，永久权益极大降低了购买决策门槛。",
+        "brandSummaries": {
+          "妙懂": "唯一记住的卖点就是「永久有效」，其他产品特色已完全忘记。",
+          "万物指南（物理十分通）": "吴姥姥的专业背书+永久有效+比竞品好是三大卖点。",
+          "NB虚拟实验室（NoBook）": "触屏模拟实验的操作方式+永久权益是核心吸引点。",
+          "洋葱": "终身权益、贴近生活的实验素材、性价比高、内容丰富多样是主要卖点。"
+        }
+      },
+      {
+        "dimension": "购买决策",
+        "subDimension": "购前预期：买前希望孩子怎么学？",
+        "summary": "家长购前预期普遍较低且模糊，多数是「先买着再说」的囤货心态，没有明确的学习计划。部分家长信任团队品质直接购买不做对比，也有家长明确只是希望孩子提前有个认知、不觉得陌生即可。",
+        "brandSummaries": {
+          "妙懂": "预期是让孩子提前了解一下，有个认知不觉得陌生。",
+          "洋葱": "部分用户没有预设，先买着；部分用户基于信任KOL直接下单。",
+          "万物指南（物理十分通）": "家长信任团队品质，物理好则化学也不会差，直接全买。"
+        }
+      },
+      {
+        "dimension": "产品体验",
+        "subDimension": "使用场景：什么时候学？",
+        "summary": "使用场景以碎片时间和周末为主，缺乏固定学习规律。大部分家长反映是「有空的时候带孩子看看」，没有形成固定的学习节奏。只有一位用户反馈孩子会主动每天刷洋葱从小学物理。时间竞争激烈，英语和主科课外班占据大部分课余时间。",
+        "brandSummaries": {
+          "NB虚拟实验室（NoBook）": "偶尔使用，主要因为英语等其他学习任务占据了大部分时间。",
+          "洋葱": "多数用户是家长带着看、有空就看；但有一位用户反馈孩子非常主动，不管的话每天都会刷。",
+          "万物指南（物理十分通）": "刚购买还未正式开始，计划周末使用。"
+        }
+      },
+      {
+        "dimension": "产品体验",
+        "subDimension": "优势/好评",
+        "summary": "各品牌的优势集中在不同方面：万物指南因「简洁明了、无废话、高质量内容」获得高度评价；洋葱因「动画形式吸引孩子、孩子主动学习、答题闭环」受到认可；NB因「安全模拟危险实验」有独特价值；学而思科学课因「动手实验、孩子喜欢」获好评。",
+        "brandSummaries": {
+          "万物指南（物理十分通）": "用户高度评价其内容简洁明了、无废话、短而精，博物馆高清藏品质量极高，后面有题库形成学习闭环。",
+          "洋葱": "孩子非常喜欢动画形式，能自主学习；实验男做实验很有趣味性；答题环节形成闭环。",
+          "NB虚拟实验室（NoBook）": "触屏操作有参与感，能安全模拟危险实验让孩子了解原理。",
+          "学而思": "孩子喜欢动手做实验，自己主动要求报名，玩中学。"
+        }
+      },
+      {
+        "dimension": "产品体验",
+        "subDimension": "劣势/差评",
+        "summary": "各品牌主要问题：洋葱被批评内容冗余（啰里啰嗦）、全部开放缺乏学习节奏、大会员收费不透明有「上当感」；NB实验室被认为模拟不够真实、利用率低；妙懂完全没使用、口碑一般；学而思性价比低需持续付费；南开AI物理课内容晦涩不如洋葱吸引人。",
+        "brandSummaries": {
+          "洋葱": "三大问题：1）视频内容啰嗦浪费时间；2）全部开放缺乏节奏感和推进动力；3）大会员宣传说全包结果还有付费内容，体验不佳。",
+          "NB虚拟实验室（NoBook）": "模拟实验与真实实验差距大，不能完全代替；利用率低。",
+          "妙懂": "买了很久一眼没看过，身边人评价一般，如果先接触到NB和万物指南就不会买。",
+          "学而思": "性价比不高，进阶需要额外付费购买教具。",
+          "南开大学AI物理课": "AI内容多、动画不如洋葱吸引人、内容晦涩。"
+        }
+      }
+    ],
+    "overallSummary": "本次研究访谈了4位二三年级孩子的家长，均为科学启蒙产品的活跃用户。核心发现：1）家长购买科学启蒙产品的根本动机是「兴趣培养+为初中理科做准备」，而非提分；2）「永久有效」是所有品牌最具杀伤力的卖点，极大降低了决策门槛并催生囤货心态；3）内容质量是留住用户的关键——万物指南因简洁专业被高度评价，洋葱因动画有趣获孩子喜爱但家长嫌冗余；4）大部分产品面临「买了不用」的共性问题，缺乏学习节奏设计是根本原因；5）信任链条（KOL→社群→朋友推荐）是主要获客路径，传统广告效果有限。"
+  }
+]
