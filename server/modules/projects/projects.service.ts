@@ -55,13 +55,22 @@ export class ProjectsService {
         const raw = readFileSync(this.dataFile, 'utf-8');
         this.projects = JSON.parse(raw);
         this.logger.log(`Loaded ${this.projects.length} projects from disk`);
-      } else {
-        const seedFile = join(process.cwd(), 'server', 'seed-data', 'projects.seed.json');
-        if (existsSync(seedFile)) {
-          const raw = readFileSync(seedFile, 'utf-8');
-          this.projects = JSON.parse(raw);
+      }
+
+      const seedFile = join(process.cwd(), 'server', 'seed-data', 'projects.seed.json');
+      if (existsSync(seedFile)) {
+        const seedRaw = readFileSync(seedFile, 'utf-8');
+        const seedProjects: Project[] = JSON.parse(seedRaw);
+        let added = 0;
+        for (const sp of seedProjects) {
+          if (!this.projects.find(p => p.id === sp.id)) {
+            this.projects.push(sp);
+            added++;
+          }
+        }
+        if (added > 0) {
           this.saveToDisk();
-          this.logger.log(`Loaded ${this.projects.length} projects from seed data`);
+          this.logger.log(`Merged ${added} seed projects into existing data`);
         }
       }
     } catch (err) {
