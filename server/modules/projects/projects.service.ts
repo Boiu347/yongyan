@@ -53,13 +53,31 @@ export class ProjectsService {
     try {
       if (existsSync(this.dataFile)) {
         const raw = readFileSync(this.dataFile, 'utf-8');
-        this.projects = JSON.parse(raw);
-        this.logger.log(`Loaded ${this.projects.length} projects from disk`);
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0 && parsed[0]?.parsedVOCs?.length > 3) {
+          this.projects = parsed;
+          this.logger.log(`Loaded ${this.projects.length} projects from disk (${parsed[0]?.parsedVOCs?.length} VOCs)`);
+          return;
+        }
       }
     } catch (err) {
-      this.logger.warn(`Failed to load projects from disk: ${err}`);
-      this.projects = [];
+      this.logger.warn(`Failed to load from disk: ${err}`);
     }
+
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const seedData = require('../../seed-data/projects.seed.json');
+      if (Array.isArray(seedData) && seedData.length > 0) {
+        this.projects = seedData;
+        this.saveToDisk();
+        this.logger.log(`Loaded ${this.projects.length} projects from bundled seed data`);
+        return;
+      }
+    } catch (err) {
+      this.logger.warn(`Failed to load seed data: ${err}`);
+    }
+
+    this.projects = [];
   }
 
   private saveToDisk() {
