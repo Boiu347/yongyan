@@ -19,6 +19,7 @@ export interface VOCItem {
   subDimension?: string;
   tag?: string;
   sourceFileId?: string;
+  audioClip?: string;
 }
 
 export interface DimensionSummary {

@@ -15,6 +15,8 @@ import {
   Mic,
   Video,
   Pencil,
+  Play,
+  Pause,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
@@ -39,6 +41,7 @@ interface VOCItem {
   subDimension?: string;
   tag?: string;
   sourceFileId?: string;
+  audioClip?: string;
 }
 
 interface SubDimension {
@@ -210,6 +213,40 @@ const DIMENSIONS: Dimension[] = [
 const AUDIO_EXTENSIONS = new Set(['mp3', 'wav', 'm4a', 'ogg', 'flac', 'webm']);
 const VIDEO_EXTENSIONS = new Set(['mp4', 'webm', 'mpeg', 'mov']);
 const DOC_EXTENSIONS = new Set(['pdf', 'doc', 'docx', 'txt', 'md']);
+
+function AudioPlayButton({ src }: { src: string }) {
+  const [playing, setPlaying] = React.useState(false);
+  const audioRef = React.useRef<HTMLAudioElement | null>(null);
+
+  const toggle = () => {
+    if (!audioRef.current) {
+      audioRef.current = new Audio(src);
+      audioRef.current.onended = () => setPlaying(false);
+    }
+    if (playing) {
+      audioRef.current.pause();
+      setPlaying(false);
+    } else {
+      audioRef.current.play();
+      setPlaying(true);
+    }
+  };
+
+  React.useEffect(() => {
+    return () => { audioRef.current?.pause(); };
+  }, []);
+
+  return (
+    <button
+      onClick={toggle}
+      className={`flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium transition-all ${playing ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-500 hover:bg-indigo-50 hover:text-indigo-600'}`}
+      title={playing ? '暂停' : '播放原声'}
+    >
+      {playing ? <Pause size={10} /> : <Play size={10} />}
+      <span>原声</span>
+    </button>
+  );
+}
 
 function getFileType(name: string): 'audio' | 'video' | 'document' {
   const ext = name.split('.').pop()?.toLowerCase() ?? '';
@@ -762,6 +799,7 @@ const InsightsPage = ({ project, onParseFiles, onAddFiles, onDeleteFile, onDelet
                                         </span>
                                         {voc.tag && <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">{voc.tag}</span>}
                                       </div>
+                                      {voc.audioClip && <AudioPlayButton src={voc.audioClip} />}
                                     </div>
                                   </div>
                                 ))}
