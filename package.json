@@ -182,13 +182,13 @@
   },
   "private": true,
   "scripts": {
-    "build": "npm run build:server && npm run build:client && node -e \"const fs=require('fs'),p=require('path');const src=p.join('server','seed-data','projects.seed.json'),dst=p.join('dist','server','seed-data','projects.seed.json');fs.mkdirSync(p.dirname(dst),{recursive:true});fs.copyFileSync(src,dst);console.log('Seed data copied to dist')\"",
+    "build": "npm run build:server && npm run build:client && node -e \"const fs=require('fs'),p=require('path');const src=p.join('server','seed-data','projects.seed.json');const dsts=[p.join('dist','server','seed-data','projects.seed.json'),p.join('seed-data','projects.seed.json')];dsts.forEach(d=>{fs.mkdirSync(p.dirname(d),{recursive:true});fs.copyFileSync(src,d)});console.log('Seed data copied to '+dsts.length+' locations')\"",
     "build:client": "vite build",
     "build:server": "nest build",
     "dev": "concurrently -n \"server,client\" -c \"blue,green\" \"npm run dev:server\" \"npm run dev:client\"",
     "dev:client": "vite --config vite.config.ts",
     "dev:server": "nest start --watch",
-    "start": "node -e \"const fs=require('fs'),p=require('path');const d=p.join(process.cwd(),'data');const f=p.join(d,'projects.json');const s=p.join(process.cwd(),'dist','server','seed-data','projects.seed.json');if(!fs.existsSync(f)||JSON.parse(fs.readFileSync(f,'utf-8'))[0]?.parsedVOCs?.length<4){fs.mkdirSync(d,{recursive:true});if(fs.existsSync(s)){fs.copyFileSync(s,f);console.log('Seed data restored')}}\" && node dist/server/main.js",
+    "start": "node init-data.js && node dist/server/main.js",
     "format": "prettier --write \"{server,client,test}/**/*.{js,ts,tsx,json,md}\"",
     "test": "jest"
   },
