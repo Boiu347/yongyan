@@ -940,7 +940,7 @@ const InsightsPage = ({ project, onParseFiles, onAddFiles, onDeleteFile, onDelet
       </div>
 
       {/* Competitive Cross-Brand Comparison */}
-      {project.dimensionSummaries && project.dimensionSummaries.length > 0 && (() => {
+      {Array.isArray(project.dimensionSummaries) && project.dimensionSummaries.length > 0 && (() => { try {
         const normalize = (s: string) => s.toLowerCase().replace(/[「」『』""''：:？?/／\s]/g, '');
 
         const DIM_STYLES: Record<string, { headerBg: string; headerText: string; accent: string }> = {
@@ -981,7 +981,7 @@ const InsightsPage = ({ project, onParseFiles, onAddFiles, onDeleteFile, onDelet
                         });
                         const brandEntries = BRANDS
                           .filter(brand => dimSummary?.brandSummaries?.[brand.name])
-                          .map(brand => ({ brand, content: dimSummary!.brandSummaries[brand.name] }));
+                          .map(brand => ({ brand, content: dimSummary?.brandSummaries?.[brand.name] || '' }));
 
                         return (
                           <div key={subDim.title} className="px-6 py-5">
@@ -994,9 +994,8 @@ const InsightsPage = ({ project, onParseFiles, onAddFiles, onDeleteFile, onDelet
                                     whileHover={{ scale: 1.02 }}
                                     transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                                     className="group/brand rounded-xl p-3.5 border border-gray-100 bg-gray-50/80 hover:bg-white hover:shadow-md transition-all duration-200 cursor-default"
-                                    style={{ borderColor: undefined }}
-                                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = brand.color; }}
-                                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = ''; }}
+                                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = brand.color; }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = ''; }}
                                   >
                                     <div className="flex items-center gap-2 mb-2">
                                       <div
@@ -1022,7 +1021,7 @@ const InsightsPage = ({ project, onParseFiles, onAddFiles, onDeleteFile, onDelet
             </div>
           </div>
         );
-      })()}
+      } catch { return null; } })()}
 
       {editingVOC && (
         <Dialog open={!!editingVOC} onOpenChange={(open) => { if (!open) setEditingVOC(null); }}>
