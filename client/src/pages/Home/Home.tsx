@@ -939,97 +939,86 @@ const InsightsPage = ({ project, onParseFiles, onAddFiles, onDeleteFile, onDelet
         })}
       </div>
 
-      {/* Competitive Cross-Brand Comparison Table */}
+      {/* Competitive Cross-Brand Comparison */}
       {project.dimensionSummaries && project.dimensionSummaries.length > 0 && (() => {
-        const activeBrands = BRANDS.filter(brand =>
-          project.dimensionSummaries!.some(ds => ds.brandSummaries?.[brand.name])
-        );
-        if (activeBrands.length === 0) return null;
-
-        const DIM_GROUP_STYLES: Record<string, { bg: string; text: string; headerBg: string }> = {
-          '需求认知': { bg: 'bg-amber-50/60', text: 'text-amber-700', headerBg: 'bg-amber-100/80' },
-          '购买决策': { bg: 'bg-blue-50/60', text: 'text-blue-700', headerBg: 'bg-blue-100/80' },
-          '产品体验': { bg: 'bg-emerald-50/60', text: 'text-emerald-700', headerBg: 'bg-emerald-100/80' },
-        };
-
         const normalize = (s: string) => s.toLowerCase().replace(/[「」『』""''：:？?/／\s]/g, '');
+
+        const DIM_STYLES: Record<string, { headerBg: string; headerText: string; accent: string }> = {
+          '需求认知': { headerBg: 'bg-amber-50', headerText: 'text-amber-800', accent: 'bg-amber-400' },
+          '购买决策': { headerBg: 'bg-blue-50', headerText: 'text-blue-800', accent: 'bg-blue-400' },
+          '产品体验': { headerBg: 'bg-emerald-50', headerText: 'text-emerald-800', accent: 'bg-emerald-400' },
+        };
 
         return (
           <div className="mt-10">
-            <div className="flex items-center gap-3 mb-5">
-              <div className="p-2 bg-indigo-50 rounded-xl">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2.5 bg-indigo-50 rounded-xl">
                 <BarChart3 size={20} className="text-indigo-500" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-gray-900">竞品横向对比</h3>
-                <p className="text-xs text-gray-400 mt-0.5">按维度对比各品牌表现</p>
+                <h3 className="text-xl font-bold text-gray-900">竞品横向对比</h3>
+                <p className="text-sm text-gray-500 mt-0.5">按维度对比各品牌表现</p>
               </div>
             </div>
 
-            <div className="border border-gray-200 rounded-2xl overflow-hidden">
-              <div className="overflow-x-auto" style={{ scrollbarWidth: 'thin' }}>
-                <table className="w-full border-collapse min-w-[800px]">
-                  <thead>
-                    <tr className="bg-gray-50">
-                      <th className="sticky left-0 z-20 bg-gray-50 px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-r border-gray-200 w-[100px] min-w-[100px]">
-                        一级维度
-                      </th>
-                      <th className="sticky left-[100px] z-20 bg-gray-50 px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-r border-gray-200 w-[160px] min-w-[160px]">
-                        二级维度
-                      </th>
-                      {activeBrands.map(brand => (
-                        <th key={brand.name} className="px-4 py-3 text-center text-xs font-bold border-b border-r last:border-r-0 border-gray-200 min-w-[180px]" style={{ color: brand.color, backgroundColor: brand.bg }}>
-                          {brand.name}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {DIMENSIONS.map((dim, dimIdx) => {
-                      const groupStyle = DIM_GROUP_STYLES[dim.name] || DIM_GROUP_STYLES['需求认知'];
-                      return dim.subDimensions.map((subDim, subIdx) => {
+            <div className="space-y-5">
+              {DIMENSIONS.map(dim => {
+                const style = DIM_STYLES[dim.name] || DIM_STYLES['需求认知'];
+                return (
+                  <div key={dim.id} className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+                    <div className={`px-6 py-4 ${style.headerBg} flex items-center gap-3`}>
+                      <div className={`w-1.5 h-6 rounded-full ${style.accent}`} />
+                      <h4 className={`text-base font-bold ${style.headerText}`}>{dim.name}</h4>
+                    </div>
+
+                    <div className="divide-y divide-gray-50">
+                      {dim.subDimensions.map(subDim => {
                         const dimSummary = project.dimensionSummaries!.find(s => {
                           if (s.dimension !== dim.name) return false;
                           const a = normalize(s.subDimension || '');
                           const b = normalize(subDim.title);
                           return a === b || a.includes(b) || b.includes(a);
                         });
-                        const isLastInGroup = subIdx === dim.subDimensions.length - 1;
-                        const isLastDim = dimIdx === DIMENSIONS.length - 1;
-                        const bottomBorder = isLastInGroup && !isLastDim ? 'border-b-2 border-gray-300' : isLastDim && isLastInGroup ? '' : 'border-b border-gray-200';
+                        const brandEntries = BRANDS
+                          .filter(brand => dimSummary?.brandSummaries?.[brand.name])
+                          .map(brand => ({ brand, content: dimSummary!.brandSummaries[brand.name] }));
 
                         return (
-                          <tr key={`${dim.name}-${subDim.title}`} className={groupStyle.bg}>
-                            {subIdx === 0 && (
-                              <td
-                                rowSpan={dim.subDimensions.length}
-                                className={`sticky left-0 z-10 px-4 py-3 text-sm font-bold border-r border-gray-200 align-middle text-center ${groupStyle.headerBg} ${groupStyle.text} ${isLastInGroup && !isLastDim ? 'border-b-2 border-b-gray-300' : ''}`}
-                              >
-                                {dim.name}
-                              </td>
+                          <div key={subDim.title} className="px-6 py-5">
+                            <h5 className="text-sm font-semibold text-gray-800 mb-3">{subDim.title}</h5>
+                            {brandEntries.length > 0 ? (
+                              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                                {brandEntries.map(({ brand, content }) => (
+                                  <motion.div
+                                    key={brand.name}
+                                    whileHover={{ scale: 1.02 }}
+                                    transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                                    className="group/brand rounded-xl p-3.5 border border-gray-100 bg-gray-50/80 hover:bg-white hover:shadow-md transition-all duration-200 cursor-default"
+                                    style={{ borderColor: undefined }}
+                                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = brand.color; }}
+                                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = ''; }}
+                                  >
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <div
+                                        className="w-1 group-hover/brand:w-1.5 h-5 rounded-full transition-all duration-200"
+                                        style={{ backgroundColor: brand.color }}
+                                      />
+                                      <span className="text-xs font-bold" style={{ color: brand.color }}>{brand.name}</span>
+                                    </div>
+                                    <p className="text-xs text-gray-600 leading-relaxed">{content}</p>
+                                  </motion.div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-xs text-gray-300 italic">暂无品牌数据</p>
                             )}
-                            <td className={`sticky left-[100px] z-10 px-4 py-3 text-sm text-gray-700 font-medium border-r border-gray-200 ${groupStyle.bg} ${bottomBorder}`}>
-                              {subDim.title.split('：')[0].split(':')[0]}
-                            </td>
-                            {activeBrands.map(brand => {
-                              const content = dimSummary?.brandSummaries?.[brand.name];
-                              return (
-                                <td key={brand.name} className={`px-4 py-3 text-xs leading-relaxed border-r last:border-r-0 border-gray-200 ${bottomBorder}`}>
-                                  {content ? (
-                                    <span className="text-gray-600">{content}</span>
-                                  ) : (
-                                    <span className="text-gray-300 italic">暂无数据</span>
-                                  )}
-                                </td>
-                              );
-                            })}
-                          </tr>
+                          </div>
                         );
-                      });
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         );
