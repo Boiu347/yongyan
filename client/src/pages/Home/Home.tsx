@@ -943,10 +943,10 @@ const InsightsPage = ({ project, onParseFiles, onAddFiles, onDeleteFile, onDelet
       {Array.isArray(project.dimensionSummaries) && project.dimensionSummaries.length > 0 && (() => { try {
         const normalize = (s: string) => s.toLowerCase().replace(/[「」『』""''：:？?/／\s]/g, '');
 
-        const DIM_TAG_STYLES: Record<string, string> = {
-          '需求认知': 'bg-amber-50 text-amber-700 border-amber-200',
-          '购买决策': 'bg-blue-50 text-blue-700 border-blue-200',
-          '产品体验': 'bg-emerald-50 text-emerald-700 border-emerald-200',
+        const DIM_ACCENT: Record<string, { dot: string; bg: string; text: string; border: string }> = {
+          '需求认知': { dot: 'bg-amber-400', bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
+          '购买决策': { dot: 'bg-blue-400', bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200' },
+          '产品体验': { dot: 'bg-emerald-400', bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
         };
 
         const activeBrands = BRANDS.filter(brand =>
@@ -956,7 +956,7 @@ const InsightsPage = ({ project, onParseFiles, onAddFiles, onDeleteFile, onDelet
 
         return (
           <div className="mt-10">
-            <div className="flex items-center gap-3 mb-6">
+            <div className="flex items-center gap-3 mb-8">
               <div className="p-2.5 bg-indigo-50 rounded-xl">
                 <BarChart3 size={20} className="text-indigo-500" />
               </div>
@@ -966,57 +966,73 @@ const InsightsPage = ({ project, onParseFiles, onAddFiles, onDeleteFile, onDelet
               </div>
             </div>
 
-            <DragScrollContainer>
-              <div className="flex gap-5 min-w-max pb-2">
-                {activeBrands.map(brand => (
+            <div className="space-y-6">
+              {DIMENSIONS.map(dim => {
+                const accent = DIM_ACCENT[dim.name] || DIM_ACCENT['需求认知'];
+                const subDimsWithData = dim.subDimensions.map(subDim => {
+                  const dimSummary = project.dimensionSummaries!.find(s => {
+                    if (s.dimension !== dim.name) return false;
+                    const a = normalize(s.subDimension || '');
+                    const b = normalize(subDim.title);
+                    return a === b || a.includes(b) || b.includes(a);
+                  });
+                  const brandEntries = activeBrands
+                    .map(brand => ({ brand, content: dimSummary?.brandSummaries?.[brand.name] || '' }))
+                    .filter(e => e.content);
+                  return { subDim, brandEntries };
+                }).filter(e => e.brandEntries.length > 0);
+
+                if (subDimsWithData.length === 0) return null;
+
+                return (
                   <motion.div
-                    key={brand.name}
-                    initial={{ opacity: 0, y: 16 }}
+                    key={dim.name}
+                    initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="w-72 flex-shrink-0 bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm"
+                    className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm"
                   >
-                    <div className="px-5 py-4 border-b" style={{ backgroundColor: brand.bg, borderColor: brand.border }}>
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-1.5 h-7 rounded-full" style={{ backgroundColor: brand.color }} />
-                        <h4 className="text-base font-bold" style={{ color: brand.color }}>{brand.name}</h4>
-                      </div>
+                    {/* 一级维度 header */}
+                    <div className={`flex items-center gap-3 px-6 py-4 ${accent.bg} border-b ${accent.border}`}>
+                      <div className={`w-2 h-2 rounded-full ${accent.dot}`} />
+                      <h4 className={`text-base font-bold ${accent.text}`}>{dim.name}</h4>
+                      <span className="text-xs text-gray-400 ml-1">{subDimsWithData.length} 个子维度</span>
                     </div>
 
-                    <div className="p-5 space-y-4">
-                      {DIMENSIONS.map(dim => {
-                        const tagStyle = DIM_TAG_STYLES[dim.name] || DIM_TAG_STYLES['需求认知'];
-                        const dimEntries = dim.subDimensions.map(subDim => {
-                          const dimSummary = project.dimensionSummaries!.find(s => {
-                            if (s.dimension !== dim.name) return false;
-                            const a = normalize(s.subDimension || '');
-                            const b = normalize(subDim.title);
-                            return a === b || a.includes(b) || b.includes(a);
-                          });
-                          return { subDim, content: dimSummary?.brandSummaries?.[brand.name] || '' };
-                        }).filter(e => e.content);
-
-                        if (dimEntries.length === 0) return null;
-                        return (
-                          <div key={dim.name}>
-                            <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full border mb-2.5 ${tagStyle}`}>
-                              {dim.name}
-                            </span>
-                            <div className="space-y-3">
-                              {dimEntries.map(({ subDim, content }) => (
-                                <div key={subDim.title}>
-                                  <p className="text-[11px] font-semibold text-gray-500 mb-1">{subDim.title.split('：')[0].split(':')[0]}</p>
-                                  <p className="text-xs text-gray-700 leading-relaxed">{content}</p>
-                                </div>
-                              ))}
-                            </div>
+                    {/* 二级维度列表 */}
+                    <div className="divide-y divide-gray-50">
+                      {subDimsWithData.map(({ subDim, brandEntries }, idx) => (
+                        <div key={subDim.title} className="px-6 py-5">
+                          {/* 二级维度标题 */}
+                          <div className="flex items-center gap-2 mb-4">
+                            <ChevronRight size={14} className="text-gray-300" />
+                            <h5 className="text-sm font-semibold text-gray-800">{subDim.title.split('：')[0].split(':')[0]}</h5>
                           </div>
-                        );
-                      })}
+
+                          {/* 品牌内容 — 流式胶囊卡片 */}
+                          <div className="flex flex-wrap gap-3 pl-5">
+                            {brandEntries.map(({ brand, content }) => (
+                              <motion.div
+                                key={brand.name}
+                                whileHover={{ scale: 1.02, y: -2 }}
+                                transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                                className="group relative flex-1 min-w-[220px] max-w-[360px] rounded-xl border border-gray-100 bg-gray-50/60 hover:bg-white hover:shadow-md hover:border-gray-200 transition-all duration-200 overflow-hidden"
+                              >
+                                {/* 品牌色条 */}
+                                <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl" style={{ backgroundColor: brand.color }} />
+                                <div className="pl-4 pr-4 py-3">
+                                  <span className="text-[11px] font-bold block mb-1.5" style={{ color: brand.color }}>{brand.name}</span>
+                                  <p className="text-xs text-gray-600 leading-relaxed">{content}</p>
+                                </div>
+                              </motion.div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </motion.div>
-                ))}
-              </div>
-            </DragScrollContainer>
+                );
+              })}
+            </div>
           </div>
         );
       } catch { return null; } })()}
