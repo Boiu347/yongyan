@@ -1119,10 +1119,11 @@ const Home = () => {
   } | null>(null);
   const [elapsed, setElapsed] = React.useState(0);
   const abortControllerRef = React.useRef<AbortController | null>(null);
+  const initialLoadDone = React.useRef(false);
 
   React.useEffect(() => {
     fetch('/api/projects').then(res => res.json()).then((serverProjects: Project[]) => {
-      if (Array.isArray(serverProjects) && serverProjects.length > 0) {
+      if (Array.isArray(serverProjects) && serverProjects.length > 0 && serverProjects[0]?.parsedVOCs?.length > 3) {
         setProjects(serverProjects);
         setActiveProject(serverProjects[0]);
         localStorage.setItem('insight_projects', JSON.stringify(serverProjects));
@@ -1131,9 +1132,11 @@ const Home = () => {
         if (saved) {
           try {
             const parsed = JSON.parse(saved);
-            setProjects(parsed);
-            if (parsed.length > 0) setActiveProject(parsed[0]);
-            fetch('/api/projects/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projects: parsed }) });
+            if (Array.isArray(parsed) && parsed.length > 0 && parsed[0]?.parsedVOCs?.length > 3) {
+              setProjects(parsed);
+              if (parsed.length > 0) setActiveProject(parsed[0]);
+              fetch('/api/projects/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projects: parsed }) });
+            }
           } catch { /* ignore */ }
         }
       }
@@ -1142,14 +1145,19 @@ const Home = () => {
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
-          setProjects(parsed);
-          if (parsed.length > 0) setActiveProject(parsed[0]);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setProjects(parsed);
+            if (parsed.length > 0) setActiveProject(parsed[0]);
+          }
         } catch { /* ignore */ }
       }
+    }).finally(() => {
+      initialLoadDone.current = true;
     });
   }, []);
 
   React.useEffect(() => {
+    if (!initialLoadDone.current) return;
     localStorage.setItem('insight_projects', JSON.stringify(projects));
     fetch('/api/projects/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projects }) }).catch(() => {});
   }, [projects]);
