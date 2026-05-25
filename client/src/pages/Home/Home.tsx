@@ -943,28 +943,16 @@ const InsightsPage = ({ project, onParseFiles, onAddFiles, onDeleteFile, onDelet
       {Array.isArray(project.dimensionSummaries) && project.dimensionSummaries.length > 0 && (() => { try {
         const normalize = (s: string) => s.toLowerCase().replace(/[「」『』""''：:？?/／\s]/g, '');
 
-        const DIM_COLORS: Record<string, { bg: string; text: string; accent: string; cellBg: string }> = {
-          '需求认知': { bg: 'bg-amber-50', text: 'text-amber-800', accent: 'bg-amber-400', cellBg: 'bg-amber-50/40' },
-          '购买决策': { bg: 'bg-blue-50', text: 'text-blue-800', accent: 'bg-blue-400', cellBg: 'bg-blue-50/40' },
-          '产品体验': { bg: 'bg-emerald-50', text: 'text-emerald-800', accent: 'bg-emerald-400', cellBg: 'bg-emerald-50/40' },
+        const DIM_TAG_STYLES: Record<string, string> = {
+          '需求认知': 'bg-amber-50 text-amber-700 border-amber-200',
+          '购买决策': 'bg-blue-50 text-blue-700 border-blue-200',
+          '产品体验': 'bg-emerald-50 text-emerald-700 border-emerald-200',
         };
 
         const activeBrands = BRANDS.filter(brand =>
           project.dimensionSummaries!.some(ds => ds.brandSummaries?.[brand.name])
         );
         if (activeBrands.length === 0) return null;
-
-        const allRows = DIMENSIONS.flatMap(dim =>
-          dim.subDimensions.map((subDim, subIdx) => {
-            const dimSummary = project.dimensionSummaries!.find(s => {
-              if (s.dimension !== dim.name) return false;
-              const a = normalize(s.subDimension || '');
-              const b = normalize(subDim.title);
-              return a === b || a.includes(b) || b.includes(a);
-            });
-            return { dim, subDim, subIdx, dimSummary };
-          })
-        );
 
         return (
           <div className="mt-10">
@@ -978,80 +966,57 @@ const InsightsPage = ({ project, onParseFiles, onAddFiles, onDeleteFile, onDelet
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-              <div className="overflow-x-auto" style={{ scrollbarWidth: 'thin' }}>
-                <div className="inline-flex min-w-full">
-                  {/* Fixed left: dimension columns */}
-                  <div className="flex-shrink-0 w-[220px] sticky left-0 z-10 bg-white">
-                    {/* Header spacer */}
-                    <div className="h-[52px] border-b border-gray-100 bg-gray-50/80" />
-                    {/* Dimension rows */}
-                    {allRows.map(({ dim, subDim, subIdx }, rowIdx) => {
-                      const colors = DIM_COLORS[dim.name] || DIM_COLORS['需求认知'];
-                      const isFirstInGroup = subIdx === 0;
-                      const isLastInGroup = subIdx === dim.subDimensions.length - 1;
-                      const isLastRow = rowIdx === allRows.length - 1;
-                      return (
-                        <div
-                          key={`${dim.name}-${subDim.title}`}
-                          className={`flex items-stretch ${isLastInGroup && !isLastRow ? 'border-b-2 border-gray-200' : 'border-b border-gray-50'}`}
-                        >
-                          {isFirstInGroup && (
-                            <div
-                              className={`w-[80px] flex-shrink-0 flex items-center justify-center ${colors.bg} border-r border-gray-100`}
-                              style={{ height: `${dim.subDimensions.length * 80}px`, marginBottom: `-${(dim.subDimensions.length - 1) * 80}px` }}
-                            >
-                              <div className="flex items-center gap-1.5 -rotate-0">
-                                <div className={`w-1 h-5 rounded-full ${colors.accent}`} />
-                                <span className={`text-xs font-bold ${colors.text} whitespace-nowrap`}>{dim.name}</span>
-                              </div>
-                            </div>
-                          )}
-                          <div className={`flex-1 px-4 flex items-center min-h-[80px] ${colors.cellBg} border-r border-gray-100 ${!isFirstInGroup ? 'ml-[80px]' : ''}`}>
-                            <span className="text-xs font-medium text-gray-700 leading-snug">{subDim.title.split('：')[0].split(':')[0]}</span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* Scrollable right: brand columns */}
-                  <div className="flex flex-1 min-w-0">
-                    {activeBrands.map(brand => (
-                      <div key={brand.name} className="flex-shrink-0 w-[220px] border-l border-gray-100">
-                        {/* Brand header */}
-                        <div className="h-[52px] px-4 flex items-center gap-2 border-b border-gray-100" style={{ backgroundColor: brand.bg }}>
-                          <div className="w-1.5 h-5 rounded-full" style={{ backgroundColor: brand.color }} />
-                          <span className="text-xs font-bold truncate" style={{ color: brand.color }}>{brand.name}</span>
-                        </div>
-                        {/* Brand cells per row */}
-                        {allRows.map(({ dim, subDim, subIdx, dimSummary }, rowIdx) => {
-                          const content = dimSummary?.brandSummaries?.[brand.name] || '';
-                          const isLastInGroup = subIdx === dim.subDimensions.length - 1;
-                          const isLastRow = rowIdx === allRows.length - 1;
-                          return (
-                            <motion.div
-                              key={`${dim.name}-${subDim.title}`}
-                              whileHover={content ? { scale: 1.01, backgroundColor: 'rgba(255,255,255,1)' } : undefined}
-                              transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                              className={`px-4 py-3 min-h-[80px] flex items-start cursor-default transition-shadow duration-150 hover:shadow-sm hover:z-10 hover:relative ${isLastInGroup && !isLastRow ? 'border-b-2 border-gray-200' : 'border-b border-gray-50'}`}
-                              onMouseEnter={content ? (e) => { e.currentTarget.style.boxShadow = `inset 0 0 0 1px ${brand.color}20`; } : undefined}
-                              onMouseLeave={content ? (e) => { e.currentTarget.style.boxShadow = ''; } : undefined}
-                            >
-                              {content ? (
-                                <p className="text-xs text-gray-600 leading-relaxed">{content}</p>
-                              ) : (
-                                <span className="text-[10px] text-gray-300">-</span>
-                              )}
-                            </motion.div>
-                          );
-                        })}
+            <DragScrollContainer>
+              <div className="flex gap-5 min-w-max pb-2">
+                {activeBrands.map(brand => (
+                  <motion.div
+                    key={brand.name}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="w-72 flex-shrink-0 bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm"
+                  >
+                    <div className="px-5 py-4 border-b" style={{ backgroundColor: brand.bg, borderColor: brand.border }}>
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-1.5 h-7 rounded-full" style={{ backgroundColor: brand.color }} />
+                        <h4 className="text-base font-bold" style={{ color: brand.color }}>{brand.name}</h4>
                       </div>
-                    ))}
-                  </div>
-                </div>
+                    </div>
+
+                    <div className="p-5 space-y-4">
+                      {DIMENSIONS.map(dim => {
+                        const tagStyle = DIM_TAG_STYLES[dim.name] || DIM_TAG_STYLES['需求认知'];
+                        const dimEntries = dim.subDimensions.map(subDim => {
+                          const dimSummary = project.dimensionSummaries!.find(s => {
+                            if (s.dimension !== dim.name) return false;
+                            const a = normalize(s.subDimension || '');
+                            const b = normalize(subDim.title);
+                            return a === b || a.includes(b) || b.includes(a);
+                          });
+                          return { subDim, content: dimSummary?.brandSummaries?.[brand.name] || '' };
+                        }).filter(e => e.content);
+
+                        if (dimEntries.length === 0) return null;
+                        return (
+                          <div key={dim.name}>
+                            <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full border mb-2.5 ${tagStyle}`}>
+                              {dim.name}
+                            </span>
+                            <div className="space-y-3">
+                              {dimEntries.map(({ subDim, content }) => (
+                                <div key={subDim.title}>
+                                  <p className="text-[11px] font-semibold text-gray-500 mb-1">{subDim.title.split('：')[0].split(':')[0]}</p>
+                                  <p className="text-xs text-gray-700 leading-relaxed">{content}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                ))}
               </div>
-            </div>
+            </DragScrollContainer>
           </div>
         );
       } catch { return null; } })()}
