@@ -1150,6 +1150,7 @@ const Home = () => {
   const [elapsed, setElapsed] = React.useState(0);
   const abortControllerRef = React.useRef<AbortController | null>(null);
   const initialLoadDone = React.useRef(false);
+  const [isInitialLoading, setIsInitialLoading] = React.useState(true);
 
   React.useEffect(() => {
     fetch('/api/projects').then(res => res.json()).then((serverProjects: Project[]) => {
@@ -1183,6 +1184,7 @@ const Home = () => {
       }
     }).finally(() => {
       initialLoadDone.current = true;
+      setIsInitialLoading(false);
     });
   }, []);
 
@@ -1412,6 +1414,22 @@ const Home = () => {
     toast.info('请通过「添加文件」上传需要解析的文件');
     setIsAddFileDialogOpen(true);
   };
+
+  if (isInitialLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center gap-4">
+          <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center">
+            <Loader2 size={32} className="text-indigo-500 animate-spin" />
+          </div>
+          <div className="text-center">
+            <p className="text-sm font-medium text-gray-700">正在加载项目数据</p>
+            <p className="text-xs text-gray-400 mt-1">请稍候...</p>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans text-gray-900 flex">
